@@ -1,0 +1,542 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AFFILIATE
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum AffiliateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_REVIEW
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  BKASH_MANUAL
+  NAGAD_MANUAL
+  BANK_TRANSFER
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  REVERSED
+}
+
+enum PayoutStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSING
+  PAID
+}
+
+enum PayoutMethod {
+  BKASH
+  NAGAD
+  BANK_TRANSFER
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  phone         String      @unique
+  passwordHash  String
+  role          UserRole    @default(STUDENT)
+  status        UserStatus  @default(ACTIVE)
+  avatarUrl     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  marketerProfile     MarketerProfile?
+  affiliateApp        AffiliateApplication?
+  orders              Order[]              @relation("CustomerOrders")
+  enrollments         Enrollment[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]           @relation("UserAuditLogs")
+  reviewedPayments    Payment[]            @relation("AdminPaymentReviews")
+  processedPayouts    Payout[]             @relation("AdminPayoutReviews")
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model MarketerProfile {
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralCode       String          @unique
+  status             AffiliateStatus @default(PENDING)
+  occupation         String?
+  experience         String?
+  channels           String?
+  whyJoin            String?
+  totalClicks        Int             @default(0)
+  totalConversions   Int             @default(0)
+  lifetimeEarnings   Decimal         @default(0.00) @db.Decimal(12, 2)
+  currentBalance     Decimal         @default(0.00) @db.Decimal(12, 2)
+  pendingBalance     Decimal         @default(0.00) @db.Decimal(12, 2)
+  paidEarnings       Decimal         @default(0.00) @db.Decimal(12, 2)
+  payoutMethod       PayoutMethod    @default(BKASH)
+  payoutAccountNo    String?
+  approvedAt         DateTime?
+  rejectionReason    String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  affiliateLinks     AffiliateLink[]
+  clicks             AffiliateClick[]
+  attributedOrders   Order[]         @relation("AffiliateOrders")
+  commissions        Commission[]
+  payouts            Payout[]
+
+  @@index([referralCode])
+  @@index([status])
+}
+
+model AffiliateApplication {
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  phone              String
+  email              String
+  occupation         String
+  channels           String
+  marketingExperience String
+  whyJoin            String
+  status             AffiliateStatus @default(PENDING)
+  rejectionReason    String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([status])
+}
+
+model AffiliateLink {
+  id               String          @id @default(cuid())
+  marketerId       String
+  marketer         MarketerProfile @relation(fields: [marketerId], references: [id], onDelete: Cascade)
+  courseId         String
+  course           Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  customSlug       String?
+  clicksCount      Int             @default(0)
+  conversionsCount Int             @default(0)
+  createdAt        DateTime        @default(now())
+
+  clicks           AffiliateClick[]
+
+  @@unique([marketerId, courseId])
+  @@index([marketerId])
+  @@index([courseId])
+}
+
+model AffiliateClick {
+  id            String         @id @default(cuid())
+  affiliateLinkId String?
+  affiliateLink AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+  marketerId    String
+  marketer      MarketerProfile @relation(fields: [marketerId], references: [id], onDelete: Cascade)
+  courseId      String?
+  course        Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  ipHash        String?
+  userAgent     String?
+  referer       String?
+  landingPage   String?
+  createdAt     DateTime       @default(now())
+
+  @@index([marketerId])
+  @@index([courseId])
+  @@index([createdAt])
+}
+
+model CourseCategory {
+  id          String   @id @default(cuid())
+  name        String
+  nameBn      String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses     Course[]
+
+  @@index([slug])
+}
+
+model Course {
+  id                  String       @id @default(cuid())
+  title               String
+  titleBn             String
+  slug                String       @unique
+  summary             String
+  summaryBn           String
+  description         String       @db.Text
+  descriptionBn       String       @db.Text
+  thumbnail           String
+  previewVideoUrl     String?
+  price               Decimal      @db.Decimal(10, 2)
+  originalPrice       Decimal      @db.Decimal(10, 2)
+  commissionRate      Decimal      @default(20.00) @db.Decimal(5, 2)
+  isAffiliateEligible Boolean      @default(true)
+  status              CourseStatus @default(DRAFT)
+  categoryId          String
+  category            CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  duration            String?
+  totalLessons        Int          @default(0)
+  difficulty          String?      @default("সকল স্তরের জন্য")
+  featured            Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  modules             CourseModule[]
+  orderItems          OrderItem[]
+  enrollments         Enrollment[]
+  affiliateLinks      AffiliateLink[]
+  clicks              AffiliateClick[]
+  commissions         Commission[]
+  commissionRules     CommissionRule[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([categoryId])
+  @@index([isAffiliateEligible])
+}
+
+model CourseModule {
+  id        String         @id @default(cuid())
+  courseId  String
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  titleBn   String
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  lessons   CourseLesson[]
+
+  @@index([courseId])
+}
+
+model CourseLesson {
+  id           String       @id @default(cuid())
+  moduleId     String
+  module       CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title        String
+  titleBn      String
+  videoUrl     String?
+  duration     String?
+  content      String?      @db.Text
+  isFreePreview Boolean     @default(false)
+  sortOrder    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([moduleId])
+}
+
+model Order {
+  id               String          @id @default(cuid())
+  orderNumber      String          @unique
+  customerId       String
+  customer         User            @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Restrict)
+  marketerId       String?
+  marketer         MarketerProfile? @relation("AffiliateOrders", fields: [marketerId], references: [id], onDelete: SetNull)
+  totalAmount      Decimal         @db.Decimal(10, 2)
+  status           OrderStatus     @default(PENDING_PAYMENT)
+  attributionDate  DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  items            OrderItem[]
+  payments         Payment[]
+  enrollments      Enrollment[]
+  commissions      Commission[]
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([marketerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id               String      @id @default(cuid())
+  orderId          String
+  order            Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courseId         String
+  course           Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  price            Decimal     @db.Decimal(10, 2)
+  commissionRate   Decimal     @db.Decimal(5, 2)
+  commissionAmount Decimal     @db.Decimal(10, 2)
+
+  commission       Commission?
+
+  @@index([orderId])
+  @@index([courseId])
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  orderId          String
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount           Decimal       @db.Decimal(10, 2)
+  paymentMethod    PaymentMethod @default(BKASH_MANUAL)
+  senderNumber     String
+  transactionId    String        @unique
+  status           PaymentStatus @default(SUBMITTED)
+  customerNote     String?
+  rejectionReason  String?
+  internalNotes    String?
+  reviewedById     String?
+  reviewedBy       User?         @relation("AdminPaymentReviews", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([transactionId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model Enrollment {
+  id         String           @id @default(cuid())
+  customerId String
+  customer   User             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  orderId    String
+  order      Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+
+  @@unique([customerId, courseId])
+  @@index([customerId])
+  @@index([courseId])
+}
+
+model CommissionRule {
+  id            String    @id @default(cuid())
+  courseId      String?
+  course        Course?   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  percentage    Decimal   @db.Decimal(5, 2)
+  isActive      Boolean   @default(true)
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([courseId])
+  @@index([isActive])
+}
+
+model Commission {
+  id             String           @id @default(cuid())
+  orderId        String
+  order          Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  orderItemId    String           @unique
+  orderItem      OrderItem        @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  marketerId     String
+  marketer       MarketerProfile  @relation(fields: [marketerId], references: [id], onDelete: Restrict)
+  courseId       String
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  amount         Decimal          @db.Decimal(10, 2)
+  rate           Decimal          @db.Decimal(5, 2)
+  status         CommissionStatus @default(APPROVED)
+  reversalReason String?
+  approvedAt     DateTime?        @default(now())
+  paidAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  payoutItems    PayoutItem[]
+
+  @@index([marketerId])
+  @@index([orderId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model Payout {
+  id                   String       @id @default(cuid())
+  payoutNumber         String       @unique
+  marketerId           String
+  marketer             MarketerProfile @relation(fields: [marketerId], references: [id], onDelete: Restrict)
+  amount               Decimal      @db.Decimal(10, 2)
+  method               PayoutMethod @default(BKASH)
+  destinationNumber    String
+  status               PayoutStatus @default(REQUESTED)
+  transactionReference String?
+  rejectionReason      String?
+  adminNotes           String?
+  requestedAt          DateTime     @default(now())
+  processedAt          DateTime?
+  processedById        String?
+  processedBy          User?        @relation("AdminPayoutReviews", fields: [processedById], references: [id], onDelete: SetNull)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  payoutItems          PayoutItem[]
+
+  @@index([payoutNumber])
+  @@index([marketerId])
+  @@index([status])
+}
+
+model PayoutItem {
+  id           String     @id @default(cuid())
+  payoutId     String
+  payout       Payout     @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  commissionId String
+  commission   Commission @relation(fields: [commissionId], references: [id], onDelete: Restrict)
+
+  @@unique([payoutId, commissionId])
+  @@index([payoutId])
+  @@index([commissionId])
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  type        String   @default("string")
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model FAQ {
+  id         String   @id @default(cuid())
+  questionBn String
+  answerBn   String   @db.Text
+  questionEn String?
+  answerEn   String?  @db.Text
+  category   String   @default("general")
+  sortOrder  Int      @default(0)
+  isPublished Boolean @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([isPublished])
+}
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  name         String
+  roleBn       String
+  quoteBn      String   @db.Text
+  avatarUrl    String?
+  rating       Int      @default(5)
+  earningsText String?
+  isPublished  Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([isPublished])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  actorEmail String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  status    String   @default("UNREAD")
+  createdAt DateTime @default(now())
+
+  @@index([status])
+}
+
+model AffiliateResource {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  category      String   @default("banner")
+  fileUrl       String
+  mediaType     String   @default("image")
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+}

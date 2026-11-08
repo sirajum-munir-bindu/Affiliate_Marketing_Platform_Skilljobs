@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 248 250 252;
+    --foreground: 23 32 51;
+    --card: 255 255 255;
+    --card-foreground: 23 32 51;
+    --primary: 229 57 69;
+    --primary-foreground: 255 255 255;
+    --secondary: 37 99 235;
+    --secondary-foreground: 255 255 255;
+    --muted: 241 245 249;
+    --muted-foreground: 71 85 105;
+    --border: 226 232 240;
+    --radius: 0.5rem;
+  }
+}
+
+body {
+  color: #172033;
+  background-color: #F8FAFC;
+  font-family: var(--font-jakarta), var(--font-hind-siliguri), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+.bangla-text {
+  font-family: var(--font-hind-siliguri), sans-serif;
+}
