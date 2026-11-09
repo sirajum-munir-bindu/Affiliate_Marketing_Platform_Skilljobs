@@ -32,6 +32,15 @@ export interface MockMarketerProfile {
   createdAt: string;
 }
 
+export interface MockInstructor {
+  name: string;
+  avatar: string;
+  designation: string;
+  instructorType: "LEAD" | "CO";
+  instructorTypeBn: string;
+  description: string;
+}
+
 export interface MockCourse {
   id: string;
   title: string;
@@ -52,6 +61,7 @@ export interface MockCourse {
   totalLessons: number;
   difficulty: string;
   featured: boolean;
+  instructor?: MockInstructor;
   modules: {
     id: string;
     titleBn: string;
@@ -162,6 +172,16 @@ export interface MockAuditLog {
   createdAt: string;
 }
 
+export interface MockTestimonial {
+  id: string;
+  name: string;
+  avatar: string;
+  roleBn: string;
+  quoteBn: string;
+  earningsText?: string;
+  rating: number;
+}
+
 // Initial In-Memory State
 class MockDatabase {
   users: MockUser[] = [
@@ -257,6 +277,14 @@ class MockDatabase {
       totalLessons: 64,
       difficulty: "শিক্ষানবিস থেকে দক্ষ",
       featured: true,
+      instructor: {
+        name: "মাহমুদুর রহমান",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+        designation: "লিড সফটওয়্যার ইঞ্জিনিয়ার",
+        instructorType: "LEAD",
+        instructorTypeBn: "লিড ইন্সট্রাক্টর",
+        description: "৮+ বছরের ইন্ডাস্ট্রিয়াল অভিজ্ঞতা সম্পন্ন সফটওয়্যার ইঞ্জিনিয়ার। শীর্ষস্থানীয় গ্লোবাল টেক কোম্পানিতে Next.js, React ও ক্লাউড আর্কিটেকচারে কাজ করার পাশাপাশি ১০,০০০+ শিক্ষার্থীকে সফলভাবে ওয়েব ডেভেলপমেন্ট প্রশিক্ষণ দিয়েছেন।",
+      },
       modules: [
         {
           id: "mod_1",
@@ -314,6 +342,14 @@ class MockDatabase {
       totalLessons: 42,
       difficulty: "সকল স্তরের জন্য",
       featured: true,
+      instructor: {
+        name: "তানজিলা আক্তার",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
+        designation: "গ্রোথ মার্কেটিং স্পেশালিস্ট",
+        instructorType: "LEAD",
+        instructorTypeBn: "লিড ইন্সট্রাক্টর",
+        description: "মেটা ও গুগল সার্টিফাইড ডিজিটাল মার্কেটার। দেশি ও আন্তর্জাতিক ই-কমার্স এবং বিটুবি ব্র্যান্ডের জন্য ৫ কোটি+ টাকার অ্যাড বাজেট সফলভাবে হ্যান্ডেল করার বাস্তব অভিজ্ঞতা রয়েছে।",
+      },
       modules: [
         {
           id: "mod_2_1",
@@ -349,6 +385,14 @@ class MockDatabase {
       totalLessons: 50,
       difficulty: "শিক্ষানবিস থেকে দক্ষ",
       featured: true,
+      instructor: {
+        name: "শাকিল মাহমুদ",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
+        designation: "প্রিন্সিপাল প্রোডাক্ট ডিজাইনার",
+        instructorType: "LEAD",
+        instructorTypeBn: "লিড ইন্সট্রাক্টর",
+        description: "আন্তর্জাতিক ফিনটেক ও সাস প্রোডাক্টে ইউজার এক্সপেরিয়েন্স ডিজাইনার হিসেবে ৭+ বছরের অভিজ্ঞতা। ফিগমা ও ডিজাইন সিস্টেমে আন্তর্জাতিক ক্লায়েন্টদের সাথে কাজের বাস্তব অভিজ্ঞতা রয়েছে।",
+      },
       modules: [],
     },
     {
@@ -370,6 +414,14 @@ class MockDatabase {
       totalLessons: 36,
       difficulty: "সকল স্তরের জন্য",
       featured: false,
+      instructor: {
+        name: "নুসরাত জাহান",
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
+        designation: "কর্পোরেট কমিউনিকেশন ট্রেইনার",
+        instructorType: "CO",
+        instructorTypeBn: "কো-ইন্সট্রাক্টর",
+        description: "কর্পোরেট লিডারশিপ ও প্রফেশনাল ইংলিশ কমিউনিকেশন ট্রেইনার। মাল্টিন্যাশনাল কোম্পানি ও রিমোট ফ্রিল্যান্সারদের সফল যোগাযোগ দক্ষতা অর্জনে ৯+ বছর ধরে সফলভাবে প্রশিক্ষণ দিচ্ছেন।",
+      },
       modules: [],
     },
   ];
@@ -542,10 +594,11 @@ class MockDatabase {
     },
   ];
 
-  testimonials = [
+  testimonials: MockTestimonial[] = [
     {
       id: "t_1",
       name: "ফারহান চৌধুরী",
+      avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
       roleBn: "সোশ্যাল মিডিয়া মার্কেটার",
       quoteBn: "স্কিলজবসের অ্যাফিলিয়েট সিস্টেমে সবচেয়ে ভালো লেগেছে এদের দ্রুত ট্র্যাকিং এবং স্বচ্ছ bKash পেমেন্ট প্রক্রিয়া। গত ৩ মাসে আমি ৭০,০০০+ টাকার কোর্স সেল করে ১৮,০০০+ টাকা কমিশন তুলেছি।",
       earningsText: "১৮,৫০০+ টাকা উত্তোলিত",
@@ -554,6 +607,7 @@ class MockDatabase {
     {
       id: "t_2",
       name: "নাসরিন সুলতানা",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
       roleBn: "ফেসবুক গ্রুপ ও কমিউনিটি লিডার",
       quoteBn: "আমার গ্রুপের মেম্বারদের জন্য মানসম্মত স্কিল কোর্স শেয়ার করতে পেরে ভালো লাগে। প্রতিটি সেলের বিস্তারিত ড্যাশবোর্ডে ক্লিয়ার দেখা যায়। কোনো জটিলতা নেই!",
       earningsText: "১২,৩০০+ টাকা উত্তোলিত",
@@ -562,6 +616,7 @@ class MockDatabase {
     {
       id: "t_3",
       name: "আরিফুল ইসলাম",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
       roleBn: "ইউটিউব কনটেন্ট ক্রিয়েটর",
       quoteBn: "১০ মিনিট স্কুলের মতো প্রফেশনাল অনুভূতি দেয় এই প্ল্যাটফর্ম। রিয়েল টাইম ক্লিক ও কনভার্সন ট্র্যাকিং নিখুঁত কাজ করে। একজন মার্কেটার হিসেবে এটি সেরা প্ল্যাটফর্ম।",
       earningsText: "২৫,৭০০+ টাকা উত্তোলিত",

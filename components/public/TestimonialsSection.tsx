@@ -41,13 +41,20 @@ export function TestimonialsSection() {
               </div>
 
               {/* Author & Verified Earnings */}
-              <div className="pt-4 border-t border-slate-200/60 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-[#172033]">{item.name}</h4>
-                  <p className="text-xs text-[#64748B]">{item.roleBn}</p>
+              <div className="pt-4 border-t border-slate-200/60 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    className="w-11 h-11 rounded-full object-cover border border-slate-200 shrink-0 shadow-xs"
+                  />
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-[#172033] truncate">{item.name}</h4>
+                    <p className="text-xs text-[#64748B] truncate">{item.roleBn}</p>
+                  </div>
                 </div>
                 {item.earningsText && (
-                  <span className="text-[11px] font-extrabold text-[#16A34A] bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
+                  <span className="text-[10px] sm:text-[11px] font-extrabold text-[#16A34A] bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100 shrink-0 whitespace-nowrap">
                     {item.earningsText}
                   </span>
                 )}

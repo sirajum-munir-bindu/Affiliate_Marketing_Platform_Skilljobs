@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { MockCourse } from "@/lib/db/mock-data";
 import { formatBDT } from "@/lib/utilities/cn";
 import { CourseEnrollModal } from "@/components/public/CourseEnrollModal";
-import { ShieldCheck, Share2, Sparkles, Check, ArrowRight } from "lucide-react";
+import { Share2, Check, ArrowRight } from "lucide-react";
 
 interface CourseDetailClientProps {
   course: MockCourse;
@@ -20,6 +20,7 @@ export function CourseDetailClient({
   const [isModalOpen, setIsModalOpen] = useState(autoOpenCheckout);
   const [copied, setCopied] = useState(false);
   const [isMarketer, setIsMarketer] = useState(false);
+  const [refCode, setRefCode] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -30,6 +31,9 @@ export function CourseDetailClient({
           (data.user?.role === "AFFILIATE" || data.user?.role === "ADMIN")
         ) {
           setIsMarketer(true);
+          if (data.user?.referralCode) {
+            setRefCode(data.user.referralCode);
+          }
         }
       })
       .catch(() => {});
@@ -37,7 +41,10 @@ export function CourseDetailClient({
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
+      const shareUrl = refCode
+        ? `${window.location.origin}/courses/${course.slug}?ref=${refCode}`
+        : window.location.href;
+      navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -89,26 +96,21 @@ export function CourseDetailClient({
             <ArrowRight className="w-5 h-5" />
           </button>
 
-          <button
-            type="button"
-            onClick={handleShare}
-            className="w-full py-2.5 px-4 rounded-xl border border-[#E2E8F0] hover:bg-slate-50 text-xs font-bold text-[#475569] transition-colors flex items-center justify-center gap-2"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>{copied ? "কোর্স লিংক কপি হয়েছে!" : "কোর্স লিংক শেয়ার করুন"}</span>
-          </button>
-        </div>
-
-        {/* Guarantees */}
-        <div className="pt-4 border-t border-slate-100 space-y-2 text-xs text-[#64748B]">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
-            <span>ম্যানুয়াল bKash দ্রুত ও নিরাপদ ভেরিফিকেশন</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#2563EB]" />
-            <span>আজীবন কোর্স এক্সেস ও মেন্টর সাপোর্ট</span>
-          </div>
+          {/* Share button ONLY visible when an Affiliate / Marketer is logged in */}
+          {isMarketer && (
+            <button
+              type="button"
+              onClick={handleShare}
+              className="w-full py-2.5 px-4 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-xs font-bold text-[#2563EB] transition-colors flex items-center justify-center gap-2"
+            >
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5" />
+              )}
+              <span>{copied ? "রেফারেল লিংক কপি হয়েছে!" : "কোর্স রেফারেল লিংক শেয়ার করুন"}</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -27,7 +27,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold text-[#172033] text-sm">ইমেইল সাপোর্ট</h3>
                 <p className="text-xs text-[#64748B] mt-0.5">যেকোনো প্রশ্ন বা পার্টনারশিপে ইমেইল পাঠান</p>
-                <p className="text-sm font-bold text-[#2563EB] mt-1">support@skilljobs.com</p>
+                <a href="mailto:corporate2@skill.jobs" className="text-sm font-bold text-[#2563EB] hover:underline mt-1 block">corporate2@skill.jobs</a>
               </div>
             </div>
 
@@ -38,7 +38,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-bold text-[#172033] text-sm">হটলাইন হেল্পলাইন</h3>
                 <p className="text-xs text-[#64748B] mt-0.5">সকাল ১০টা থেকে রাত ৮টা (শনি - বৃহস্পতি)</p>
-                <p className="text-sm font-bold text-[#172033] mt-1">+৮৮০ ১৭০০০০০০০০</p>
+                <a href="tel:+8801847334785" className="text-sm font-bold text-[#172033] hover:text-[#2563EB] mt-1 block">+880 1847-334785</a>
               </div>
             </div>
 
@@ -48,7 +48,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-bold text-[#172033] text-sm">প্রধান কার্যালয়</h3>
-                <p className="text-xs text-[#64748B] mt-0.5">বনানী, ঢাকা ১২১৩, বাংলাদেশ</p>
+                <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">DT4, 102/1 Shukrabad, Mirpur Road, Dhanmondi, Dhaka - 1207</p>
               </div>
             </div>
           </div>

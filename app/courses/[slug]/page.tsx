@@ -3,7 +3,7 @@ import { Footer } from "@/components/public/Footer";
 import { DataService } from "@/lib/services/data-service";
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import { notFound } from "next/navigation";
-import { Clock, BookOpen, CheckCircle, ShieldCheck, Award, ArrowRight, Play, UserCheck, HelpCircle } from "lucide-react";
+import { Clock, BookOpen, CheckCircle, Award, ArrowRight } from "lucide-react";
 import { CourseDetailClient } from "./CourseDetailClient";
 import { processAffiliateClick, setAttributionCookie } from "@/lib/affiliate/tracking";
 
@@ -34,6 +34,15 @@ export default async function CourseDetailPage({
   }
 
   const commissionAmount = (course.price * course.commissionRate) / 100;
+
+  const instructor = course.instructor || {
+    name: "মাহমুদুর রহমান",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+    designation: "লিড সফটওয়্যার ইঞ্জিনিয়ার",
+    instructorType: "LEAD" as const,
+    instructorTypeBn: "লিড ইন্সট্রাক্টর",
+    description: "৮+ বছরের ইন্ডাস্ট্রিয়াল অভিজ্ঞতা সম্পন্ন সফটওয়্যার ইঞ্জিনিয়ার। শীর্ষস্থানীয় গ্লোবাল টেক কোম্পানিতে Next.js, React ও ক্লাউড আর্কিটেকচারে কাজ করার পাশাপাশি ১০,০০০+ শিক্ষার্থীকে সফলভাবে ওয়েব ডেভেলপমেন্ট প্রশিক্ষণ দিয়েছেন।",
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
@@ -116,49 +125,41 @@ export default async function CourseDetailPage({
                 </div>
               </div>
 
-              {/* Syllabus / Modules */}
-              <div className="bg-white p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-[#172033]">কোর্স কারিকুলাম ও মডিউল</h2>
-                  <span className="text-xs font-semibold text-[#64748B]">
-                    {formatBnNumber(course.modules.length)} টি মডিউল
-                  </span>
-                </div>
+              {/* Course Instructor */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-5">
+                <h2 className="text-xl font-bold text-[#172033]">কোর্স ইন্সট্রাক্টর</h2>
 
-                {course.modules.length === 0 ? (
-                  <p className="text-xs text-slate-500">কারিকুলাম শীঘ্রই বিস্তারিতভাবে আপডেট করা হবে।</p>
-                ) : (
-                  <div className="space-y-4">
-                    {course.modules.map((mod, modIdx) => (
-                      <div key={mod.id} className="border border-slate-200 rounded-xl overflow-hidden">
-                        <div className="bg-slate-50 px-5 py-3.5 font-bold text-sm text-[#172033] flex items-center justify-between">
-                          <span>{mod.titleBn}</span>
-                          <span className="text-xs text-[#64748B] font-normal">
-                            {formatBnNumber(mod.lessons.length)} টি লেসন
-                          </span>
-                        </div>
-                        <div className="divide-y divide-slate-100 bg-white">
-                          {mod.lessons.map((lesson) => (
-                            <div key={lesson.id} className="px-5 py-3 flex items-center justify-between text-xs text-[#475569] hover:bg-slate-50">
-                              <div className="flex items-center gap-2.5">
-                                <Play className="w-3.5 h-3.5 text-[#2563EB]" />
-                                <span>{lesson.titleBn}</span>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                {lesson.isFreePreview && (
-                                  <span className="text-[10px] font-bold text-[#16A34A] bg-emerald-50 px-2 py-0.5 rounded">
-                                    ফ্রি প্রিভিউ
-                                  </span>
-                                )}
-                                <span className="text-[#64748B]">{lesson.duration}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                <div className="flex flex-col sm:flex-row items-start gap-5">
+                  <img
+                    src={instructor.avatar}
+                    alt={instructor.name}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                  />
+
+                  <div className="space-y-2 flex-1">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg sm:text-xl font-bold text-[#172033]">
+                          {instructor.name}
+                        </h3>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                          instructor.instructorType === "CO"
+                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                            : "bg-blue-50 text-[#2563EB] border-blue-200"
+                        }`}>
+                          {instructor.instructorTypeBn || (instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর")}
+                        </span>
                       </div>
-                    ))}
+                      <p className="text-xs sm:text-sm text-[#64748B] mt-0.5 font-medium">
+                        {instructor.designation}
+                      </p>
+                    </div>
+
+                    <p className="text-sm text-[#475569] leading-relaxed">
+                      {instructor.description}
+                    </p>
                   </div>
-                )}
+                </div>
               </div>
 
             </div>

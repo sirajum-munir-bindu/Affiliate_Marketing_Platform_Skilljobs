@@ -91,16 +91,16 @@ export function Footer() {
             </h4>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#2563EB]" />
-                <span>support@skilljobs.com</span>
+                <Mail className="w-4 h-4 text-[#2563EB] shrink-0" />
+                <a href="mailto:corporate2@skill.jobs" className="hover:text-white transition-colors">corporate2@skill.jobs</a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#16A34A]" />
-                <span>+৮৮০ ১৭০০০০০০০০</span>
+                <Phone className="w-4 h-4 text-[#16A34A] shrink-0" />
+                <a href="tel:+8801847334785" className="hover:text-white transition-colors">+880 1847-334785</a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#E53945] shrink-0 mt-0.5" />
-                <span>ঢাকা, বাংলাদেশ</span>
+                <span className="leading-relaxed">DT4, 102/1 Shukrabad, Mirpur Road, Dhanmondi, Dhaka - 1207</span>
               </li>
             </ul>
           </div>
