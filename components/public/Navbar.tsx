@@ -83,7 +83,7 @@ export function Navbar() {
   const navLinks = [
     { name: "হোম", href: "/", icon: Home },
     { name: "কোর্সসমূহ", href: "/courses", icon: BookOpen },
-    { name: "সচরাচর প্রশ্ন", href: "/faq", icon: HelpCircle },
+    { name: "প্রশ্ন সমূহ", href: "/faq", icon: HelpCircle },
     { name: "যোগাযোগ", href: "/contact", icon: Phone },
   ];
 

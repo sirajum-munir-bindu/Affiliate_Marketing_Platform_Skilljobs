@@ -1,4 +1,14 @@
-import { mockDb, MockCourse, MockOrder, MockPayment, MockCommission, MockPayout } from "../db/mock-data";
+import {
+  mockDb,
+  DEFAULT_COURSE_CATEGORIES,
+  MockCourse,
+  MockCourseCategory,
+  MockMarketerProfile,
+  MockOrder,
+  MockPayment,
+  MockCommission,
+  MockPayout,
+} from "../db/mock-data";
 import bcrypt from "bcryptjs";
 import { generateReferralCode } from "../affiliate/tracking";
 
@@ -45,6 +55,196 @@ export class DataService {
     return newUser;
   }
 
+  // --- COURSE CATEGORIES ---
+  private static ensureCategories(): MockCourseCategory[] {
+    if (!Array.isArray(mockDb.categories)) {
+      mockDb.categories = [...DEFAULT_COURSE_CATEGORIES];
+    }
+    return mockDb.categories;
+  }
+
+  private static sanitizeCategorySlug(raw: string): string {
+    return raw
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  static async getCategories(): Promise<MockCourseCategory[]> {
+    const categories = this.ensureCategories();
+    // Ensure any category present on existing courses is also represented dynamically
+    const existingSlugs = new Set(categories.map((c) => c.slug));
+    for (const course of mockDb.courses) {
+      if (course.categorySlug && !existingSlugs.has(course.categorySlug)) {
+        categories.push({
+          id: `cat_${course.categorySlug}`,
+          name: course.categorySlug.replace(/-/g, " "),
+          nameBn: course.categoryNameBn || course.categorySlug,
+          slug: course.categorySlug,
+          createdAt: new Date().toISOString(),
+        });
+        existingSlugs.add(course.categorySlug);
+      }
+    }
+    return [...categories];
+  }
+
+  static async createCategory(
+    data: { name?: string; nameBn: string; slug?: string },
+    adminEmail?: string
+  ): Promise<MockCourseCategory> {
+    const categories = this.ensureCategories();
+    const nameBn = data.nameBn?.trim() || data.name?.trim();
+    if (!nameBn) {
+      throw new Error("ক্যাটাগরির নাম প্রদান করুন।");
+    }
+
+    const name = data.name?.trim() || nameBn;
+    let slug = this.sanitizeCategorySlug(data.slug || data.name || "");
+    if (!slug) {
+      slug = `category-${Date.now().toString(36)}`;
+    }
+
+    const duplicateName = categories.some(
+      (c) => c.nameBn.trim().toLowerCase() === nameBn.toLowerCase()
+    );
+    if (duplicateName) {
+      throw new Error("এই নামে একটি ক্যাটাগরি ইতিমধ্যে রয়েছে।");
+    }
+
+    const duplicateSlug = categories.some((c) => c.slug === slug);
+    if (duplicateSlug) {
+      if (data.slug?.trim()) {
+        throw new Error("এই স্লাগ (Slug) দিয়ে একটি ক্যাটাগরি ইতিমধ্যে রয়েছে।");
+      }
+      slug = `${slug}-${Date.now().toString(36).slice(-4)}`;
+    }
+
+    const newCategory: MockCourseCategory = {
+      id: `cat_${Date.now()}`,
+      name,
+      nameBn,
+      slug,
+      createdAt: new Date().toISOString(),
+    };
+
+    categories.push(newCategory);
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "CATEGORY_CREATED",
+        entity: "CourseCategory",
+        entityId: newCategory.id,
+        details: `Created course category: ${newCategory.nameBn} (${newCategory.slug})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return newCategory;
+  }
+
+  static async updateCategory(
+    id: string,
+    data: { name?: string; nameBn?: string; slug?: string },
+    adminEmail?: string
+  ): Promise<MockCourseCategory> {
+    const categories = this.ensureCategories();
+    const index = categories.findIndex((c) => c.id === id);
+    if (index === -1) {
+      throw new Error("ক্যাটাগরি খুঁজে পাওয়া যায়নি।");
+    }
+
+    const current = categories[index];
+    const nextNameBn = data.nameBn !== undefined ? data.nameBn.trim() : current.nameBn;
+    if (!nextNameBn) {
+      throw new Error("ক্যাটাগরির নাম খালি রাখা যাবে না।");
+    }
+
+    const nextName = data.name !== undefined ? data.name.trim() || nextNameBn : current.name;
+    let nextSlug = current.slug;
+    if (data.slug !== undefined && data.slug.trim()) {
+      const sanitized = this.sanitizeCategorySlug(data.slug);
+      if (!sanitized) {
+        throw new Error("সঠিক ইংরেজি স্লাগ (Slug) প্রদান করুন।");
+      }
+      const slugConflict = categories.some((c) => c.id !== id && c.slug === sanitized);
+      if (slugConflict) {
+        throw new Error("এই স্লাগটি অন্য একটি ক্যাটাগরিতে ব্যবহৃত হচ্ছে।");
+      }
+      nextSlug = sanitized;
+    }
+
+    const nameConflict = categories.some(
+      (c) => c.id !== id && c.nameBn.trim().toLowerCase() === nextNameBn.toLowerCase()
+    );
+    if (nameConflict) {
+      throw new Error("এই নামে আরেকটি ক্যাটাগরি ইতিমধ্যে রয়েছে।");
+    }
+
+    const updated: MockCourseCategory = {
+      ...current,
+      name: nextName,
+      nameBn: nextNameBn,
+      slug: nextSlug,
+    };
+    categories[index] = updated;
+
+    // Keep courses linked to this category in sync
+    for (const course of mockDb.courses) {
+      if (course.categorySlug === current.slug) {
+        course.categorySlug = updated.slug;
+        course.categoryNameBn = updated.nameBn;
+      }
+    }
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "CATEGORY_UPDATED",
+        entity: "CourseCategory",
+        entityId: id,
+        details: `Updated course category: ${updated.nameBn} (${updated.slug})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return updated;
+  }
+
+  static async deleteCategory(id: string, adminEmail?: string): Promise<MockCourseCategory> {
+    const categories = this.ensureCategories();
+    const index = categories.findIndex((c) => c.id === id);
+    if (index === -1) {
+      throw new Error("ক্যাটাগরি খুঁজে পাওয়া যায়নি।");
+    }
+
+    const target = categories[index];
+    const usedByCourse = mockDb.courses.some((c) => c.categorySlug === target.slug);
+    if (usedByCourse) {
+      throw new Error("এই ক্যাটাগরির অধীনে কোর্স রয়েছে, তাই এটি ডিলিট করা যাবে না।");
+    }
+
+    categories.splice(index, 1);
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "CATEGORY_DELETED",
+        entity: "CourseCategory",
+        entityId: id,
+        details: `Deleted course category: ${target.nameBn} (${target.slug})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return target;
+  }
+
   // --- COURSES ---
   static async getCourses(onlyPublished = true) {
     if (onlyPublished) {
@@ -61,37 +261,171 @@ export class DataService {
     return mockDb.courses.find((c) => c.id === id) || null;
   }
 
-  static async createCourse(data: Partial<MockCourse>) {
+  static async createCourse(data: Partial<MockCourse>, adminEmail?: string) {
+    const slugBase =
+      data.slug?.trim() ||
+      (data.title || "course")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") ||
+      `course-${Date.now()}`;
+
+    const slugExists = mockDb.courses.some((c) => c.slug === slugBase);
+    const finalSlug = slugExists ? `${slugBase}-${Date.now().toString().slice(-4)}` : slugBase;
+
+    const categories = await this.getCategories();
+    const requestedSlug = data.categorySlug?.trim() || "web-development";
+    const matchedCat = categories.find((cat) => cat.slug === requestedSlug);
+    const categoryNameBn = data.categoryNameBn?.trim() || matchedCat?.nameBn || "ওয়েব ডেভেলপমেন্ট";
+
+    if (!matchedCat && requestedSlug) {
+      categories.push({
+        id: `cat_${Date.now()}`,
+        name: requestedSlug.replace(/-/g, " "),
+        nameBn: categoryNameBn,
+        slug: requestedSlug,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     const newCourse: MockCourse = {
       id: `crs_${Date.now()}`,
       title: data.title || "New Course",
       titleBn: data.titleBn || "নতুন কোর্স",
-      slug: data.slug || `course-${Date.now()}`,
-      summaryBn: data.summaryBn || "",
-      descriptionBn: data.descriptionBn || "",
+      slug: finalSlug,
+      summaryBn: data.summaryBn || "বিস্তারিত কোর্স সিলেবাস ও প্রজেক্ট ভিত্তিক প্রশিক্ষণ।",
+      descriptionBn: data.descriptionBn || "এই কোর্সটি আপনাকে বাস্তব জীবনের প্রজেক্টের মাধ্যমে দক্ষ করে তুলবে।",
       thumbnail: data.thumbnail || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800",
-      price: data.price || 2000,
-      originalPrice: data.originalPrice || 4000,
-      commissionRate: data.commissionRate || 20,
+      previewVideoUrl: data.previewVideoUrl,
+      price: Number(data.price) || 2000,
+      originalPrice: Number(data.originalPrice) || 4000,
+      commissionRate: Number(data.commissionRate) || 20,
       isAffiliateEligible: data.isAffiliateEligible ?? true,
       status: data.status || "PUBLISHED",
-      categorySlug: data.categorySlug || "web-development",
-      categoryNameBn: data.categoryNameBn || "ওয়েব ডেভেলপমেন্ট",
+      categorySlug: requestedSlug,
+      categoryNameBn,
       duration: data.duration || "২০+ ঘণ্টা",
-      totalLessons: data.totalLessons || 20,
+      totalLessons: Number(data.totalLessons) || 20,
       difficulty: data.difficulty || "সকল স্তরের জন্য",
-      featured: data.featured || false,
-      modules: [],
+      featured: data.featured ?? false,
+      learningOutcomes: Array.isArray(data.learningOutcomes)
+        ? data.learningOutcomes.map((item) => item.trim()).filter(Boolean)
+        : undefined,
+      instructor: data.instructor?.name?.trim()
+        ? {
+            name: data.instructor.name.trim(),
+            avatar:
+              data.instructor.avatar?.trim() ||
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+            designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+            instructorType: data.instructor.instructorType === "CO" ? "CO" : "LEAD",
+            instructorTypeBn:
+              data.instructor.instructorTypeBn?.trim() ||
+              (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+            description: data.instructor.description?.trim() || "",
+          }
+        : undefined,
+      modules: Array.isArray(data.modules) ? data.modules : [],
     };
     mockDb.courses.unshift(newCourse);
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "COURSE_CREATED",
+        entity: "Course",
+        entityId: newCourse.id,
+        details: `Created course: ${newCourse.titleBn} (৳${newCourse.price})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     return newCourse;
   }
 
-  static async updateCourse(id: string, data: Partial<MockCourse>) {
+  static async updateCourse(id: string, data: Partial<MockCourse>, adminEmail?: string) {
     const courseIndex = mockDb.courses.findIndex((c) => c.id === id);
     if (courseIndex === -1) throw new Error("Course not found");
-    mockDb.courses[courseIndex] = { ...mockDb.courses[courseIndex], ...data };
-    return mockDb.courses[courseIndex];
+
+    const categories = await this.getCategories();
+    const nextCategorySlug = data.categorySlug ?? mockDb.courses[courseIndex].categorySlug;
+    const matchedCat = categories.find((cat) => cat.slug === nextCategorySlug);
+    const nextCategoryNameBn =
+      data.categoryNameBn || matchedCat?.nameBn || mockDb.courses[courseIndex].categoryNameBn;
+
+    const updated: MockCourse = {
+      ...mockDb.courses[courseIndex],
+      ...data,
+      categorySlug: nextCategorySlug,
+      categoryNameBn: nextCategoryNameBn,
+      price: data.price !== undefined ? Number(data.price) : mockDb.courses[courseIndex].price,
+      originalPrice:
+        data.originalPrice !== undefined ? Number(data.originalPrice) : mockDb.courses[courseIndex].originalPrice,
+      commissionRate:
+        data.commissionRate !== undefined ? Number(data.commissionRate) : mockDb.courses[courseIndex].commissionRate,
+      totalLessons:
+        data.totalLessons !== undefined ? Number(data.totalLessons) : mockDb.courses[courseIndex].totalLessons,
+      learningOutcomes:
+        data.learningOutcomes !== undefined
+          ? data.learningOutcomes.map((item) => item.trim()).filter(Boolean)
+          : mockDb.courses[courseIndex].learningOutcomes,
+      instructor:
+        data.instructor !== undefined
+          ? data.instructor?.name?.trim()
+            ? {
+                name: data.instructor.name.trim(),
+                avatar:
+                  data.instructor.avatar?.trim() ||
+                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+                designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+                instructorType: data.instructor.instructorType === "CO" ? "CO" : "LEAD",
+                instructorTypeBn:
+                  data.instructor.instructorTypeBn?.trim() ||
+                  (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+                description: data.instructor.description?.trim() || "",
+              }
+            : undefined
+          : mockDb.courses[courseIndex].instructor,
+      modules: data.modules !== undefined ? data.modules : mockDb.courses[courseIndex].modules,
+    };
+
+    mockDb.courses[courseIndex] = updated;
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "COURSE_UPDATED",
+        entity: "Course",
+        entityId: id,
+        details: `Updated course: ${updated.titleBn}`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return updated;
+  }
+
+  static async deleteCourse(id: string, adminEmail?: string) {
+    const courseIndex = mockDb.courses.findIndex((c) => c.id === id);
+    if (courseIndex === -1) throw new Error("কোর্সটি খুঁজে পাওয়া যায়নি।");
+
+    const [deletedCourse] = mockDb.courses.splice(courseIndex, 1);
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "COURSE_DELETED",
+        entity: "Course",
+        entityId: id,
+        details: `Deleted course: ${deletedCourse.titleBn}`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return deletedCourse;
   }
 
   // --- AFFILIATES & APPLICATIONS ---
@@ -107,16 +441,301 @@ export class DataService {
     return mockDb.marketers.find((m) => m.id === id) || null;
   }
 
+  private static enrichMarketer(m: MockMarketerProfile) {
+    const user = mockDb.users.find((u) => u.id === m.userId);
+    return {
+      ...m,
+      userName: user?.name || "Unknown",
+      userEmail: user?.email || "",
+      userPhone: user?.phone || "",
+    };
+  }
+
   static async getAllMarketers() {
-    return mockDb.marketers.map((m) => {
-      const user = mockDb.users.find((u) => u.id === m.userId);
-      return {
-        ...m,
-        userName: user?.name || "Unknown",
-        userEmail: user?.email || "",
-        userPhone: user?.phone || "",
+    return mockDb.marketers.map((m) => this.enrichMarketer(m));
+  }
+
+  static async createMarketer(
+    data: {
+      name: string;
+      email: string;
+      phone: string;
+      password?: string;
+      referralCode?: string;
+      status?: MockMarketerProfile["status"];
+      occupation?: string;
+      experience?: string;
+      channels?: string;
+      whyJoin?: string;
+      payoutMethod?: MockMarketerProfile["payoutMethod"];
+      payoutAccountNo?: string;
+      currentBalance?: number;
+    },
+    adminEmail?: string
+  ) {
+    const name = data.name?.trim();
+    const email = data.email?.trim().toLowerCase();
+    const phone = data.phone?.trim();
+
+    if (!name || !email || !phone) {
+      throw new Error("মার্কেটারের নাম, ইমেইল এবং ফোন নম্বর আবশ্যক।");
+    }
+
+    let user = mockDb.users.find(
+      (u) => u.email.toLowerCase() === email || u.phone === phone
+    );
+
+    if (user) {
+      const existingMarketer = mockDb.marketers.find((m) => m.userId === user!.id);
+      if (existingMarketer) {
+        throw new Error("এই ইমেইল বা ফোন নম্বরে ইতিমধ্যে একজন অ্যাফিলিয়েট মার্কেটার নিবন্ধিত আছেন।");
+      }
+      user.name = name;
+      user.email = email;
+      user.phone = phone;
+      if (user.role !== "ADMIN") {
+        user.role = "AFFILIATE";
+      }
+      user.status = data.status === "SUSPENDED" ? "SUSPENDED" : "ACTIVE";
+    } else {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(data.password?.trim() || "Password@123456", salt);
+      user = {
+        id: `usr_${Date.now()}`,
+        name,
+        email,
+        phone,
+        passwordHash,
+        role: "AFFILIATE",
+        status: data.status === "SUSPENDED" ? "SUSPENDED" : "ACTIVE",
+        createdAt: new Date().toISOString(),
       };
-    });
+      mockDb.users.push(user);
+    }
+
+    let referralCode = data.referralCode
+      ? data.referralCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "")
+      : generateReferralCode(name);
+
+    if (!referralCode) {
+      referralCode = generateReferralCode(name);
+    }
+
+    const codeExists = mockDb.marketers.some(
+      (m) => m.referralCode.toUpperCase() === referralCode.toUpperCase()
+    );
+    if (codeExists) {
+      if (data.referralCode?.trim()) {
+        throw new Error("এই রেফারেল কোডটি ইতিমধ্যে ব্যবহৃত হচ্ছে।");
+      }
+      referralCode = `${referralCode}${Date.now().toString().slice(-3)}`;
+    }
+
+    const status: MockMarketerProfile["status"] = data.status || "APPROVED";
+    const now = new Date().toISOString();
+    const initialBalance = Math.max(0, Number(data.currentBalance) || 0);
+
+    const newProfile: MockMarketerProfile = {
+      id: `mkt_${Date.now()}`,
+      userId: user.id,
+      referralCode,
+      status,
+      occupation: data.occupation?.trim() || "ডিজিটাল মার্কেটার",
+      experience: data.experience?.trim() || "",
+      channels: data.channels?.trim() || "",
+      whyJoin: data.whyJoin?.trim() || "",
+      totalClicks: 0,
+      totalConversions: 0,
+      lifetimeEarnings: initialBalance,
+      currentBalance: initialBalance,
+      pendingBalance: 0,
+      paidEarnings: 0,
+      payoutMethod: data.payoutMethod || "BKASH",
+      payoutAccountNo: data.payoutAccountNo?.trim() || phone,
+      approvedAt: status === "APPROVED" ? now : undefined,
+      createdAt: now,
+    };
+
+    mockDb.marketers.unshift(newProfile);
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "MARKETER_CREATED",
+        entity: "MarketerProfile",
+        entityId: newProfile.id,
+        details: `Created affiliate marketer: ${user.name} (${newProfile.referralCode})`,
+        createdAt: now,
+      });
+    }
+
+    return this.enrichMarketer(newProfile);
+  }
+
+  static async updateMarketer(
+    id: string,
+    data: {
+      name?: string;
+      userName?: string;
+      email?: string;
+      userEmail?: string;
+      phone?: string;
+      userPhone?: string;
+      referralCode?: string;
+      status?: MockMarketerProfile["status"];
+      occupation?: string;
+      experience?: string;
+      channels?: string;
+      whyJoin?: string;
+      rejectionReason?: string;
+      payoutMethod?: MockMarketerProfile["payoutMethod"];
+      payoutAccountNo?: string;
+      currentBalance?: number;
+      pendingBalance?: number;
+      paidEarnings?: number;
+      lifetimeEarnings?: number;
+    },
+    adminEmail?: string
+  ) {
+    const index = mockDb.marketers.findIndex((m) => m.id === id);
+    if (index === -1) {
+      throw new Error("মার্কেটার প্রোফাইল খুঁজে পাওয়া যায়নি।");
+    }
+
+    const current = mockDb.marketers[index];
+    const user = mockDb.users.find((u) => u.id === current.userId);
+
+    const nextName = (data.name ?? data.userName)?.trim();
+    const nextEmail = (data.email ?? data.userEmail)?.trim().toLowerCase();
+    const nextPhone = (data.phone ?? data.userPhone)?.trim();
+
+    if (user) {
+      if (nextEmail && nextEmail !== user.email.toLowerCase()) {
+        const emailTaken = mockDb.users.some(
+          (u) => u.id !== user.id && u.email.toLowerCase() === nextEmail
+        );
+        if (emailTaken) {
+          throw new Error("এই ইমেইলটি অন্য একজন ইউজার ব্যবহার করছেন।");
+        }
+        user.email = nextEmail;
+      }
+
+      if (nextPhone && nextPhone !== user.phone) {
+        const phoneTaken = mockDb.users.some(
+          (u) => u.id !== user.id && u.phone === nextPhone
+        );
+        if (phoneTaken) {
+          throw new Error("এই ফোন নম্বরটি অন্য একজন ইউজার ব্যবহার করছেন।");
+        }
+        user.phone = nextPhone;
+      }
+
+      if (nextName) {
+        user.name = nextName;
+      }
+    }
+
+    let nextReferralCode = current.referralCode;
+    if (data.referralCode !== undefined && data.referralCode.trim()) {
+      const normalized = data.referralCode
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, "");
+      if (!normalized) {
+        throw new Error("সঠিক রেফারেল কোড প্রদান করুন।");
+      }
+      const codeTaken = mockDb.marketers.some(
+        (m) => m.id !== id && m.referralCode.toUpperCase() === normalized
+      );
+      if (codeTaken) {
+        throw new Error("এই রেফারেল কোডটি অন্য একজন মার্কেটার ব্যবহার করছেন।");
+      }
+      nextReferralCode = normalized;
+    }
+
+    const nextStatus = data.status ?? current.status;
+    if (user && user.role !== "ADMIN") {
+      if (nextStatus === "SUSPENDED") {
+        user.status = "SUSPENDED";
+      } else if (nextStatus === "APPROVED") {
+        user.role = "AFFILIATE";
+        user.status = "ACTIVE";
+      }
+    }
+
+    const updated: MockMarketerProfile = {
+      ...current,
+      referralCode: nextReferralCode,
+      status: nextStatus,
+      occupation: data.occupation !== undefined ? data.occupation.trim() : current.occupation,
+      experience: data.experience !== undefined ? data.experience.trim() : current.experience,
+      channels: data.channels !== undefined ? data.channels.trim() : current.channels,
+      whyJoin: data.whyJoin !== undefined ? data.whyJoin.trim() : current.whyJoin,
+      rejectionReason:
+        data.rejectionReason !== undefined ? data.rejectionReason.trim() : current.rejectionReason,
+      payoutMethod: data.payoutMethod ?? current.payoutMethod,
+      payoutAccountNo:
+        data.payoutAccountNo !== undefined ? data.payoutAccountNo.trim() : current.payoutAccountNo,
+      currentBalance:
+        data.currentBalance !== undefined ? Number(data.currentBalance) : current.currentBalance,
+      pendingBalance:
+        data.pendingBalance !== undefined ? Number(data.pendingBalance) : current.pendingBalance,
+      paidEarnings:
+        data.paidEarnings !== undefined ? Number(data.paidEarnings) : current.paidEarnings,
+      lifetimeEarnings:
+        data.lifetimeEarnings !== undefined ? Number(data.lifetimeEarnings) : current.lifetimeEarnings,
+      approvedAt:
+        nextStatus === "APPROVED" ? current.approvedAt || new Date().toISOString() : current.approvedAt,
+    };
+
+    mockDb.marketers[index] = updated;
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "MARKETER_UPDATED",
+        entity: "MarketerProfile",
+        entityId: id,
+        details: `Updated affiliate marketer: ${user?.name || updated.referralCode} (Status: ${updated.status})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return this.enrichMarketer(updated);
+  }
+
+  static async deleteMarketer(id: string, adminEmail?: string) {
+    const index = mockDb.marketers.findIndex((m) => m.id === id);
+    if (index === -1) {
+      throw new Error("মার্কেটার প্রোফাইল খুঁজে পাওয়া যায়নি।");
+    }
+
+    const [removed] = mockDb.marketers.splice(index, 1);
+    const user = mockDb.users.find((u) => u.id === removed.userId);
+    if (user && user.role === "AFFILIATE") {
+      user.role = "STUDENT";
+    }
+
+    if (adminEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail: adminEmail,
+        action: "MARKETER_DELETED",
+        entity: "MarketerProfile",
+        entityId: id,
+        details: `Deleted affiliate marketer: ${user?.name || removed.referralCode} (${removed.referralCode})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return {
+      ...removed,
+      userName: user?.name || "Unknown",
+      userEmail: user?.email || "",
+      userPhone: user?.phone || "",
+    };
   }
 
   static async getAffiliateApplications() {

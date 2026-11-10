@@ -1,11 +1,14 @@
 import { Navbar } from "@/components/public/Navbar";
 import { Footer } from "@/components/public/Footer";
 import { DataService } from "@/lib/services/data-service";
+import { DEFAULT_INSTRUCTOR, DEFAULT_LEARNING_OUTCOMES } from "@/lib/db/mock-data";
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import { notFound } from "next/navigation";
-import { Clock, BookOpen, CheckCircle, Award, ArrowRight } from "lucide-react";
+import { Clock, BookOpen, CheckCircle, Award, PlayCircle } from "lucide-react";
 import { CourseDetailClient } from "./CourseDetailClient";
-import { processAffiliateClick, setAttributionCookie } from "@/lib/affiliate/tracking";
+import { processAffiliateClick } from "@/lib/affiliate/tracking";
+
+export const dynamic = "force-dynamic";
 
 export default async function CourseDetailPage({
   params,
@@ -35,14 +38,11 @@ export default async function CourseDetailPage({
 
   const commissionAmount = (course.price * course.commissionRate) / 100;
 
-  const instructor = course.instructor || {
-    name: "মাহমুদুর রহমান",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-    designation: "লিড সফটওয়্যার ইঞ্জিনিয়ার",
-    instructorType: "LEAD" as const,
-    instructorTypeBn: "লিড ইন্সট্রাক্টর",
-    description: "৮+ বছরের ইন্ডাস্ট্রিয়াল অভিজ্ঞতা সম্পন্ন সফটওয়্যার ইঞ্জিনিয়ার। শীর্ষস্থানীয় গ্লোবাল টেক কোম্পানিতে Next.js, React ও ক্লাউড আর্কিটেকচারে কাজ করার পাশাপাশি ১০,০০০+ শিক্ষার্থীকে সফলভাবে ওয়েব ডেভেলপমেন্ট প্রশিক্ষণ দিয়েছেন।",
-  };
+  const instructor = course.instructor || DEFAULT_INSTRUCTOR;
+  const learningOutcomes =
+    course.learningOutcomes && course.learningOutcomes.length > 0
+      ? course.learningOutcomes
+      : DEFAULT_LEARNING_OUTCOMES;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
@@ -109,14 +109,7 @@ export default async function CourseDetailPage({
               <div className="bg-white p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-4">
                 <h2 className="text-xl font-bold text-[#172033]">এই কোর্সে যা যা শিখবেন</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  {[
-                    "বাস্তব প্রজেক্টের মাধ্যমে হ্যান্ডস-অন কোডিং ও ডিজাইন",
-                    "আন্তর্জাতিক মার্কেটপ্লেসের রিয়েল লাইফ ফ্রিল্যান্সিং গাইডলাইন",
-                    "ইন্ডাস্ট্রি স্ট্যান্ডার্ড বেস্ট প্র্যাকটিস ও আর্কিটেকচার",
-                    "প্রোডাকশন লেভেলে ডেপ্লয়মেন্ট ও পারফরম্যান্স অপ্টিমাইজেশন",
-                    "লাইফটাইম সাপোর্ট কমিউনিটি ও নিয়মিত আপডেট",
-                    "কোর্স কমপ্লিশন সার্টিফিকেট ও সিভি তৈরির গাইড",
-                  ].map((text, i) => (
+                  {learningOutcomes.map((text, i) => (
                     <div key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#172033]">
                       <CheckCircle className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
                       <span>{text}</span>
@@ -124,6 +117,61 @@ export default async function CourseDetailPage({
                   ))}
                 </div>
               </div>
+
+              {/* Course Curriculum / Modules */}
+              {course.modules && course.modules.length > 0 && (
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-bold text-[#172033]">কোর্স কারিকুলাম ও সিলেবাস</h2>
+                    <span className="text-xs font-semibold text-[#64748B] bg-slate-100 px-3 py-1 rounded-full">
+                      {formatBnNumber(course.modules.length)} টি মডিউল
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    {course.modules.map((mod) => (
+                      <div
+                        key={mod.id}
+                        className="rounded-xl border border-slate-200 overflow-hidden"
+                      >
+                        <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-2">
+                          <h3 className="font-bold text-sm text-[#172033]">{mod.titleBn}</h3>
+                          <span className="text-[11px] font-semibold text-[#64748B] shrink-0">
+                            {formatBnNumber(mod.lessons.length)} টি লেসন
+                          </span>
+                        </div>
+                        {mod.lessons.length > 0 && (
+                          <div className="divide-y divide-slate-100">
+                            {mod.lessons.map((lesson) => (
+                              <div
+                                key={lesson.id}
+                                className="px-4 py-3 flex items-center justify-between gap-3 text-xs sm:text-sm text-[#475569]"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <PlayCircle className="w-4 h-4 text-[#2563EB] shrink-0" />
+                                  <span className="truncate font-medium text-[#172033]">
+                                    {lesson.titleBn}
+                                  </span>
+                                  {lesson.isFreePreview && (
+                                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-[#16A34A] border border-emerald-200 text-[10px] font-bold shrink-0">
+                                      ফ্রি প্রিভিউ
+                                    </span>
+                                  )}
+                                </div>
+                                {lesson.duration && (
+                                  <span className="text-xs text-[#64748B] shrink-0">
+                                    {lesson.duration}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Course Instructor */}
               <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-5">

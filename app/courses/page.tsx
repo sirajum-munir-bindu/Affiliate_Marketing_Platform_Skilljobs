@@ -6,6 +6,8 @@ import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import Link from "next/link";
 import { BookOpen, Clock, Search, Filter } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function CoursesPage({
   searchParams,
 }: {
@@ -16,7 +18,10 @@ export default async function CoursesPage({
     session && (session.role === "AFFILIATE" || session.role === "ADMIN")
   );
 
-  const allCourses = await DataService.getCourses(true);
+  const [allCourses, dynamicCategories] = await Promise.all([
+    DataService.getCourses(true),
+    DataService.getCategories(),
+  ]);
   
   const filteredCourses = allCourses.filter((course) => {
     if (searchParams.category && course.categorySlug !== searchParams.category) {
@@ -35,10 +40,10 @@ export default async function CoursesPage({
 
   const categories = [
     { label: "সকল কোর্স", slug: "" },
-    { label: "ওয়েব ডেভেলপমেন্ট", slug: "web-development" },
-    { label: "ডিজিটাল মার্কেটিং", slug: "digital-marketing" },
-    { label: "গ্রাফিক্স ও ইউআই/ইউএক্স", slug: "graphics-uiux" },
-    { label: "ক্যারিয়ার ও ফ্রিল্যান্সিং", slug: "career-freelancing" },
+    ...dynamicCategories.map((cat) => ({
+      label: cat.nameBn,
+      slug: cat.slug,
+    })),
   ];
 
   return (

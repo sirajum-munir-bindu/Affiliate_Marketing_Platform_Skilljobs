@@ -41,6 +41,14 @@ export interface MockInstructor {
   description: string;
 }
 
+export interface MockCourseCategory {
+  id: string;
+  name: string;
+  nameBn: string;
+  slug: string;
+  createdAt: string;
+}
+
 export interface MockCourse {
   id: string;
   title: string;
@@ -61,6 +69,7 @@ export interface MockCourse {
   totalLessons: number;
   difficulty: string;
   featured: boolean;
+  learningOutcomes?: string[];
   instructor?: MockInstructor;
   modules: {
     id: string;
@@ -75,6 +84,25 @@ export interface MockCourse {
     }[];
   }[];
 }
+
+export const DEFAULT_LEARNING_OUTCOMES: string[] = [
+  "বাস্তব প্রজেক্টের মাধ্যমে হ্যান্ডস-অন কোডিং ও ডিজাইন",
+  "আন্তর্জাতিক মার্কেটপ্লেসের রিয়েল লাইফ ফ্রিল্যান্সিং গাইডলাইন",
+  "ইন্ডাস্ট্রি স্ট্যান্ডার্ড বেস্ট প্র্যাকটিস ও আর্কিটেকচার",
+  "প্রোডাকশন লেভেলে ডেপ্লয়মেন্ট ও পারফরম্যান্স অপ্টিমাইজেশন",
+  "লাইফটাইম সাপোর্ট কমিউনিটি ও নিয়মিত আপডেট",
+  "কোর্স কমপ্লিশন সার্টিফিকেট ও সিভি তৈরির গাইড",
+];
+
+export const DEFAULT_INSTRUCTOR: MockInstructor = {
+  name: "মাহমুদুর রহমান",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+  designation: "লিড সফটওয়্যার ইঞ্জিনিয়ার",
+  instructorType: "LEAD",
+  instructorTypeBn: "লিড ইন্সট্রাক্টর",
+  description:
+    "৮+ বছরের ইন্ডাস্ট্রিয়াল অভিজ্ঞতা সম্পন্ন সফটওয়্যার ইঞ্জিনিয়ার। শীর্ষস্থানীয় গ্লোবাল টেক কোম্পানিতে Next.js, React ও ক্লাউড আর্কিটেকচারে কাজ করার পাশাপাশি ১০,০০০+ শিক্ষার্থীকে সফলভাবে ওয়েব ডেভেলপমেন্ট প্রশিক্ষণ দিয়েছেন।",
+};
 
 export interface MockOrder {
   id: string;
@@ -182,6 +210,51 @@ export interface MockTestimonial {
   rating: number;
 }
 
+export const DEFAULT_COURSE_CATEGORIES: MockCourseCategory[] = [
+  {
+    id: "cat_1",
+    name: "Web Development",
+    nameBn: "ওয়েব ডেভেলপমেন্ট",
+    slug: "web-development",
+    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+  },
+  {
+    id: "cat_2",
+    name: "Digital Marketing",
+    nameBn: "ডিজিটাল মার্কেটিং",
+    slug: "digital-marketing",
+    createdAt: new Date(Date.now() - 86400000 * 29).toISOString(),
+  },
+  {
+    id: "cat_3",
+    name: "Graphics & UI/UX",
+    nameBn: "গ্রাফিক্স ও ইউআই/ইউএক্স",
+    slug: "graphics-uiux",
+    createdAt: new Date(Date.now() - 86400000 * 28).toISOString(),
+  },
+  {
+    id: "cat_4",
+    name: "Career & Freelancing",
+    nameBn: "ক্যারিয়ার ও ফ্রিল্যান্সিং",
+    slug: "career-freelancing",
+    createdAt: new Date(Date.now() - 86400000 * 27).toISOString(),
+  },
+  {
+    id: "cat_5",
+    name: "Video Editing & Motion",
+    nameBn: "ভিডিও এডিটিং ও মোশন",
+    slug: "video-editing",
+    createdAt: new Date(Date.now() - 86400000 * 26).toISOString(),
+  },
+  {
+    id: "cat_6",
+    name: "Data Science & AI",
+    nameBn: "ডাটা সায়েন্স ও এআই",
+    slug: "data-science",
+    createdAt: new Date(Date.now() - 86400000 * 25).toISOString(),
+  },
+];
+
 // Initial In-Memory State
 class MockDatabase {
   users: MockUser[] = [
@@ -256,6 +329,8 @@ class MockDatabase {
       createdAt: new Date(Date.now() - 3600000).toISOString(),
     },
   ];
+
+  categories: MockCourseCategory[] = [...DEFAULT_COURSE_CATEGORIES];
 
   courses: MockCourse[] = [
     {

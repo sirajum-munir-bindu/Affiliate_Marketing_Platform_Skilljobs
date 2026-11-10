@@ -8,10 +8,29 @@ interface Props {
   course: MockCourse;
 }
 
+function getYouTubeEmbedUrl(url?: string): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtube.com")) {
+      const videoId = parsed.searchParams.get("v");
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+    if (parsed.hostname.includes("youtu.be")) {
+      const videoId = parsed.pathname.replace("/", "");
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function CoursePlayer({ course }: Props) {
   const firstLesson = course.modules[0]?.lessons[0] || null;
   const [activeLesson, setActiveLesson] = useState<any>(firstLesson);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
+  const embedUrl = getYouTubeEmbedUrl(activeLesson?.videoUrl);
 
   const toggleComplete = (lessonId: string) => {
     setCompletedLessonIds((prev) =>
@@ -28,13 +47,33 @@ export function CoursePlayer({ course }: Props) {
         {/* Responsive Video Container */}
         <div className="aspect-video bg-black rounded-2xl overflow-hidden relative shadow-lg flex items-center justify-center text-white">
           {activeLesson ? (
-            <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-slate-900">
-              <div className="w-16 h-16 rounded-full bg-red-600/90 flex items-center justify-center text-white mb-4 animate-pulse">
-                <Play className="w-8 h-8 fill-current ml-1" />
+            embedUrl ? (
+              <iframe
+                src={embedUrl}
+                title={activeLesson.titleBn}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-slate-900">
+                <div className="w-16 h-16 rounded-full bg-red-600/90 flex items-center justify-center text-white mb-4 animate-pulse">
+                  <Play className="w-8 h-8 fill-current ml-1" />
+                </div>
+                <h3 className="font-extrabold text-base sm:text-lg max-w-md">{activeLesson.titleBn}</h3>
+                <p className="text-xs text-slate-400 mt-1">{activeLesson.duration || "ভিডিও লেসন"}</p>
+                {activeLesson.videoUrl && (
+                  <a
+                    href={activeLesson.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
+                  >
+                    ভিডিও লিংক খুলুন
+                  </a>
+                )}
               </div>
-              <h3 className="font-extrabold text-base sm:text-lg max-w-md">{activeLesson.titleBn}</h3>
-              <p className="text-xs text-slate-400 mt-1">{activeLesson.duration || "ভিডিও লেসন"}</p>
-            </div>
+            )
           ) : (
             <p className="text-sm text-slate-400">লেসন নির্বাচন করুন</p>
           )}

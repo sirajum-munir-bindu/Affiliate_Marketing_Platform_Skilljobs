@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { MockCourse } from "@/lib/db/mock-data";
 import { formatBDT } from "@/lib/utilities/cn";
 import { CourseEnrollModal } from "@/components/public/CourseEnrollModal";
-import { Share2, Check, ArrowRight } from "lucide-react";
+import { Share2, Check, ArrowRight, PlayCircle } from "lucide-react";
 
 interface CourseDetailClientProps {
   course: MockCourse;
@@ -54,12 +54,27 @@ export function CourseDetailClient({
     <>
       <div className="sticky top-28 bg-white rounded-2xl border border-[#E2E8F0] shadow-lg overflow-hidden space-y-6 p-6">
         {/* Course Thumbnail */}
-        <div className="aspect-video w-full rounded-xl overflow-hidden bg-slate-100">
+        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100">
           <img
             src={course.thumbnail}
             alt={course.titleBn}
             className="w-full h-full object-cover"
           />
+          {course.previewVideoUrl && (
+            <a
+              href={course.previewVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 bg-slate-950/35 hover:bg-slate-950/50 transition-colors flex flex-col items-center justify-center gap-2 text-white"
+            >
+              <span className="w-12 h-12 rounded-full bg-[#E53945] flex items-center justify-center shadow-lg">
+                <PlayCircle className="w-6 h-6" />
+              </span>
+              <span className="text-xs font-bold bg-black/70 px-3 py-1 rounded-full">
+                ফ্রি প্রিভিউ ভিডিও দেখুন
+              </span>
+            </a>
+          )}
         </div>
 
         {/* Pricing Box */}
