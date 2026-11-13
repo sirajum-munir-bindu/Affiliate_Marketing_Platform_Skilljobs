@@ -25,78 +25,78 @@ export function DashboardPreview() {
           <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xl overflow-hidden">
             
             {/* Top Browser Bar */}
-            <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="w-3 h-3 rounded-full bg-amber-500" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-xs text-slate-400 font-mono ml-3">
+            <div className="bg-slate-900 text-white px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 shrink-0" />
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-500 shrink-0" />
+                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-[11px] sm:text-xs text-slate-400 font-mono ml-2 sm:ml-3 truncate max-w-[160px] sm:max-w-none">
                   skilljobs.com/affiliate/dashboard
                 </span>
               </div>
-              <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-800">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-800 shrink-0 whitespace-nowrap">
                 লাইভ প্রিভিউ ডেমো
               </span>
             </div>
 
             {/* Mock Dashboard Interior */}
-            <div className="p-6 sm:p-8 space-y-6 bg-[#F8FAFC]">
+            <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-[#F8FAFC]">
               
               {/* Top Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 
-                <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-                  <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold mb-1">
+                <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs sm:shadow-sm">
+                  <div className="flex items-center justify-between text-[#64748B] text-[11px] sm:text-xs font-semibold mb-1">
                     <span>মোট ক্লিক</span>
-                    <MousePointerClick className="w-4 h-4 text-[#2563EB]" />
+                    <MousePointerClick className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2563EB]" />
                   </div>
-                  <div className="text-2xl font-black text-[#172033]">৪২০</div>
-                  <div className="text-[11px] text-[#16A34A] font-semibold mt-1">↑ ১২% বৃদ্ধি</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#172033]">৪২০</div>
+                  <div className="text-[10px] sm:text-[11px] text-[#16A34A] font-semibold mt-1">↑ ১২% বৃদ্ধি</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-                  <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold mb-1">
+                <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs sm:shadow-sm">
+                  <div className="flex items-center justify-between text-[#64748B] text-[11px] sm:text-xs font-semibold mb-1">
                     <span>কনভার্সন (বিক্রি)</span>
-                    <TrendingUp className="w-4 h-4 text-[#E53945]" />
+                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E53945]" />
                   </div>
-                  <div className="text-2xl font-black text-[#172033]">২৮ টি</div>
-                  <div className="text-[11px] text-[#2563EB] font-semibold mt-1">৬.৬% কনভার্সন রেট</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#172033]">২৮ টি</div>
+                  <div className="text-[10px] sm:text-[11px] text-[#2563EB] font-semibold mt-1 truncate">৬.৬% কনভার্সন</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-                  <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold mb-1">
+                <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs sm:shadow-sm">
+                  <div className="flex items-center justify-between text-[#64748B] text-[11px] sm:text-xs font-semibold mb-1">
                     <span>বর্তমান ব্যালেন্স</span>
-                    <DollarSign className="w-4 h-4 text-[#16A34A]" />
+                    <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#16A34A]" />
                   </div>
-                  <div className="text-2xl font-black text-[#16A34A]">৳ ৩,২০০</div>
-                  <div className="text-[11px] text-[#64748B] mt-1">উত্তোলনযোগ্য</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#16A34A]">৳ ৩,২০০</div>
+                  <div className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">উত্তোলনযোগ্য</div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-                  <div className="flex items-center justify-between text-[#64748B] text-xs font-semibold mb-1">
-                    <span>মোট উপার্জিত কমিশন</span>
-                    <ShieldCheck className="w-4 h-4 text-purple-600" />
+                <div className="bg-white p-3 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs sm:shadow-sm">
+                  <div className="flex items-center justify-between text-[#64748B] text-[11px] sm:text-xs font-semibold mb-1">
+                    <span>মোট উপার্জিত</span>
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
                   </div>
-                  <div className="text-2xl font-black text-[#172033]">৳ ১৫,৪০০</div>
-                  <div className="text-[11px] text-[#64748B] mt-1">লাইফটাইম আর্নিং</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#172033]">৳ ১৫,৪০০</div>
+                  <div className="text-[10px] sm:text-[11px] text-[#64748B] mt-1">লাইফটাইম আর্নিং</div>
                 </div>
 
               </div>
 
               {/* Referral Link Quick Tool Preview */}
-              <div className="bg-white p-5 rounded-xl border border-[#2563EB]/30 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="space-y-1 text-center sm:text-left">
+              <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#2563EB]/30 shadow-xs sm:shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="space-y-1 text-center sm:text-left min-w-0">
                   <span className="text-xs font-bold text-[#2563EB] flex items-center gap-1.5 justify-center sm:justify-start">
                     <LinkIcon className="w-3.5 h-3.5" />
                     আপনার ইউনিক রেফারেল কোড
                   </span>
-                  <div className="font-mono text-base font-extrabold text-[#172033]">
+                  <div className="font-mono text-xs sm:text-sm md:text-base font-extrabold text-[#172033] break-all">
                     https://skilljobs.com/courses?ref=TANVIR50
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="px-5 py-2.5 rounded-lg bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-sm shrink-0"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#2563EB] text-white text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-xs shrink-0"
                 >
                   লিংক কপি করুন
                 </button>

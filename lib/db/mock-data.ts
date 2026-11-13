@@ -49,6 +49,34 @@ export interface MockCourseCategory {
   createdAt: string;
 }
 
+export interface MockPlatformSettings {
+  video: {
+    title: string;
+    subtitle: string;
+    videoUrl: string;
+    embedUrl: string;
+    durationText: string;
+    buttonText: string;
+    thumbnailUrl: string;
+    isEnabled: boolean;
+  };
+  stats: {
+    isManual: boolean;
+    manualAffiliates: number;
+    manualSales: number;
+    manualCommissionPaid: number;
+    manualAvailableCourses: number;
+  };
+  dashboardAnalytics?: {
+    isManual: boolean;
+    totalClicks: number;
+    totalConversions: number;
+    summaryTurnover7d: number;
+    summaryPayout7d: number;
+    summaryOrders7d: number;
+  };
+}
+
 export interface MockCourse {
   id: string;
   title: string;
@@ -738,6 +766,34 @@ class MockDatabase {
       rating: 5,
     },
   ];
+
+  settings: MockPlatformSettings = {
+    video: {
+      title: "স্কিলজবস অ্যাফিলিয়েশন প্রোগ্রাম",
+      subtitle: "অফিসিয়াল ভিডিও গাইড",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0",
+      durationText: "ভিডিও ওভারভিউ • ২:৪৯ মিনিট",
+      buttonText: "এখনই দেখুন",
+      thumbnailUrl: "/images/video-preview.jpg",
+      isEnabled: true,
+    },
+    stats: {
+      isManual: false,
+      manualAffiliates: 120,
+      manualSales: 450,
+      manualCommissionPaid: 68000,
+      manualAvailableCourses: 4,
+    },
+    dashboardAnalytics: {
+      isManual: false,
+      totalClicks: 420,
+      totalConversions: 28,
+      summaryTurnover7d: 142000,
+      summaryPayout7d: 28400,
+      summaryOrders7d: 69,
+    },
+  };
 }
 
 // Global singleton in dev

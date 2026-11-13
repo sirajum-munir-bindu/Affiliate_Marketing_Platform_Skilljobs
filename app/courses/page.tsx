@@ -75,26 +75,26 @@ export default async function CoursesPage({
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="max-w-3xl mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#172033] tracking-tight">
+        <div className="max-w-3xl mb-6 sm:mb-10">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-[#172033] tracking-tight">
             প্র্যাকটিক্যাল স্কিল ডেভেলপমেন্ট কোর্সসমূহ
           </h1>
-          <p className="mt-3 text-base text-[#475569]">
+          <p className="mt-2 sm:mt-3 text-sm sm:text-base text-[#475569]">
             আন্তর্জাতিক মানসম্পন্ন প্রফেশনাল কারিকুলাম, বাস্তব প্রজেক্ট ও আজীবন মেন্টরশিপ সাপোর্ট।
           </p>
         </div>
 
         {/* Categories Bar */}
-        <div className="flex flex-wrap items-center gap-2 mb-8">
+        <div className="flex items-center gap-2 mb-6 sm:mb-8 overflow-x-auto pb-2 scrollbar-none sm:flex-wrap">
           {categories.map((cat) => {
             const isActive = (searchParams.category || "") === cat.slug;
             return (
               <Link
                 key={cat.slug}
                 href={cat.slug ? `/courses?category=${cat.slug}` : "/courses"}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all border ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all border whitespace-nowrap shrink-0 ${
                   isActive
                     ? "bg-[#2563EB] text-white border-[#2563EB] shadow-sm"
                     : "bg-white text-[#475569] border-[#E2E8F0] hover:border-slate-300"

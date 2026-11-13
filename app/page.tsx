@@ -7,17 +7,20 @@ import { TestimonialsSection } from "@/components/public/TestimonialsSection";
 import { Footer } from "@/components/public/Footer";
 import { DataService } from "@/lib/services/data-service";
 
-export const revalidate = 60; // ISR 60s
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const stats = await DataService.getPlatformStats();
-  const courses = await DataService.getCourses(true);
+  const [stats, courses, settings] = await Promise.all([
+    DataService.getPlatformStats(),
+    DataService.getCourses(true),
+    DataService.getHomepageSettings(),
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
       <main className="flex-1">
-        <Hero />
+        <Hero videoSettings={settings.video} />
         <StatsCounter stats={stats} />
         <FeaturedCourses courses={courses} />
         <DashboardPreview />

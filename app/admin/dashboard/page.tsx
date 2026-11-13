@@ -25,24 +25,27 @@ import {
   Lock,
   Zap,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  Sliders,
+  Video,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const stats = await DataService.getAdminOverviewStats();
-  const applications = await DataService.getAffiliateApplications();
+  const [stats, applications, analyticsData] = await Promise.all([
+    DataService.getAdminOverviewStats(),
+    DataService.getAffiliateApplications(),
+    DataService.getAdminAnalyticsData(),
+  ]);
+
   const pendingApps = applications.filter((a) => a.status === "PENDING");
 
   const pendingPayments = mockDb.payments
     .filter((p) => p.status === "SUBMITTED")
     .slice(0, 5);
 
-  const conversionRate =
-    stats.totalClicks > 0
-      ? ((stats.totalConversions / stats.totalClicks) * 100).toFixed(1)
-      : "0";
+  const conversionRate = analyticsData.conversionRate;
 
   const statCards = [
     {
@@ -127,7 +130,7 @@ export default async function AdminDashboardPage() {
     {
       label: "অ্যাফিলিয়েট ট্র্যাফিক ক্লিক",
       subLabel: "রেফারেল লিংকের মাধ্যমে ভিজিট",
-      value: formatBnNumber(stats.totalClicks),
+      value: formatBnNumber(analyticsData.totalClicks),
       trend: "রিয়েল-টাইম ট্র্যাকিং",
       trendPositive: true,
       icon: MousePointerClick,
@@ -140,7 +143,7 @@ export default async function AdminDashboardPage() {
       label: "কনভার্সন পারফরম্যান্স",
       subLabel: "ক্লিক থেকে সফল বিক্রয় হার",
       value: `${formatBnNumber(conversionRate)}%`,
-      trend: `${formatBnNumber(stats.totalConversions)} টি সেলস`,
+      trend: `${formatBnNumber(analyticsData.totalConversions)} টি সেলস`,
       trendPositive: true,
       icon: TrendingUp,
       color: "text-teal-500",
@@ -177,6 +180,14 @@ export default async function AdminDashboardPage() {
 
           {/* Quick Action CTAs inside Hero */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/admin/homepage-control"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm font-black transition-all shadow-md shadow-amber-500/20 hover:scale-[1.02]"
+            >
+              <Sliders className="w-4 h-4" />
+              <span>ভিডিও ও কাউন্টার কন্ট্রোল</span>
+            </Link>
+
             <Link
               href="/admin/courses"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-black transition-all shadow-md hover:scale-[1.02]"
@@ -283,10 +294,11 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Interactive Analytics Charts (Recharts Area & Bar) */}
+      {/* Interactive Analytics Charts (Dynamic Area & Top Selling Courses) */}
       <AdminCharts
         totalRevenue={stats.totalRevenue}
         totalCommissions={stats.totalCommissionGenerated}
+        analyticsData={analyticsData}
       />
 
       {/* Split Dual Action Queues */}
@@ -443,6 +455,34 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Homepage Controls Quick Banner */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 rounded-3xl border border-amber-200/80 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <Sliders className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              হোমপেজ ভিডিও ও কাউন্টার ম্যানুয়াল কন্ট্রোল
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                নতুন ফিচার
+              </span>
+            </h3>
+            <p className="text-xs text-slate-600 mt-0.5">
+              হোমপেজের অফিসিয়াল ভিডিও গাইড এবং ৪টি পরিসংখ্যান (সক্রিয় অ্যাফিলিয়েট, সফল সেলস, মোট কমিশন, কোর্স) কাস্টমাইজ করুন।
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/admin/homepage-control"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-bold transition-all shadow-md shrink-0 hover:scale-[1.02]"
+        >
+          <span>কন্ট্রোল প্যানেল খুলুন</span>
+          <ArrowRight className="w-4 h-4 text-amber-400" />
+        </Link>
       </div>
 
       {/* Safety SOP & System Health Cards */}

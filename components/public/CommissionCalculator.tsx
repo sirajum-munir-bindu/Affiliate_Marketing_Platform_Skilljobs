@@ -34,7 +34,7 @@ export function CommissionCalculator() {
         <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-[#E2E8F0] shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12">
           
           {/* Controls Column (7 cols) */}
-          <div className="p-8 md:p-10 md:col-span-7 space-y-8">
+          <div className="p-5 sm:p-8 md:p-10 md:col-span-7 space-y-6 sm:space-y-8">
             
             {/* Control 1: Course Average Price */}
             <div className="space-y-3">
@@ -119,8 +119,8 @@ export function CommissionCalculator() {
           </div>
 
           {/* Result Card Column (5 cols) */}
-          <div className="bg-gradient-to-br from-[#172033] to-[#1E293B] text-white p-8 md:p-10 md:col-span-5 flex flex-col justify-between">
-            <div className="space-y-6">
+          <div className="bg-gradient-to-br from-[#172033] to-[#1E293B] text-white p-5 sm:p-8 md:p-10 md:col-span-5 flex flex-col justify-between">
+            <div className="space-y-5 sm:space-y-6">
               
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
                 <Calculator className="w-4 h-4 text-[#2563EB]" />
@@ -128,7 +128,7 @@ export function CommissionCalculator() {
               </div>
 
               <div>
-                <div className="text-4xl sm:text-5xl font-black text-[#10B981] tracking-tight">
+                <div className="text-3xl sm:text-4xl md:text-5xl font-black text-[#10B981] tracking-tight">
                   {formatBDT(estimatedCommission)}
                 </div>
                 <p className="text-xs text-slate-400 mt-2">

@@ -56,7 +56,7 @@ function RegisterContent() {
   };
 
   return (
-    <div className="max-w-md w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-8 sm:p-10 space-y-6">
+    <div className="max-w-md w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-5 sm:p-8 md:p-10 space-y-6">
       
       {/* Back to Home Option */}
       <div className="flex items-center justify-between -mt-2">
@@ -213,7 +213,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-3 sm:p-4">
       <Suspense fallback={<div className="text-xs text-slate-400">লোড হচ্ছে...</div>}>
         <RegisterContent />
       </Suspense>

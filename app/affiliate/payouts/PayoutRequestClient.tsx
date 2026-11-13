@@ -190,7 +190,7 @@ export function PayoutRequestClient({
             <button
               type="submit"
               disabled={isLoading || balance < 500 || amount > balance || amount < 500}
-              className="inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-[#E53945] to-rose-600 hover:from-red-600 hover:to-rose-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-black text-xs shadow-lg shadow-red-500/20 disabled:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-[#E53945] to-rose-600 hover:from-red-600 hover:to-rose-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-black text-xs shadow-lg shadow-red-500/20 disabled:shadow-none transition-all cursor-pointer disabled:cursor-not-allowed"
             >
               {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{isLoading ? "আবেদন পাঠানো হচ্ছে..." : "উত্তোলন নিশ্চিত করুন"}</span>
@@ -207,8 +207,8 @@ export function PayoutRequestClient({
             {payouts.length} টি লেনদেন
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse text-xs min-w-[620px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B] font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">আইডি</th>

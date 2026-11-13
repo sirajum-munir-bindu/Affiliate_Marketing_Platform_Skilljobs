@@ -69,8 +69,8 @@ export default async function AffiliateCommissionsPage() {
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse text-xs min-w-[620px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B] font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">অর্ডার নং</th>

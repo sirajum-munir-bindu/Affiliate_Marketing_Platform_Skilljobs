@@ -42,8 +42,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-8 sm:p-10 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-3 sm:p-4">
+      <div className="max-w-md w-full bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-5 sm:p-8 md:p-10 space-y-6">
         
         {/* Back to Home Option */}
         <div className="flex items-center justify-between -mt-2">
@@ -87,7 +87,7 @@ export default function LoginPage() {
             <UserCheck className="w-3.5 h-3.5 text-[#2563EB]" />
             <span>এক ক্লিকে ডেমো একাউন্ট টেস্ট করুন:</span>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
             <button
               type="button"
               onClick={() => fillQuickLogin("admin@skilljobs.com", "Admin@123456")}

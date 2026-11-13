@@ -16,7 +16,8 @@ import {
   GraduationCap,
   X,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Sliders,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -63,6 +64,18 @@ export function AdminSidebar({
         },
         { name: "কমিশন হিসাব", href: "/admin/commissions", icon: Coins },
         { name: "পে-আউট প্রসেসিং", href: "/admin/payouts", icon: CreditCard },
+      ],
+    },
+    {
+      title: "কন্টেন্ট ও সাইট কন্ট্রোল",
+      items: [
+        {
+          name: "ভিডিও ও কাউন্টার কন্ট্রোল",
+          href: "/admin/homepage-control",
+          icon: Sliders,
+          badge: "ম্যানুয়াল",
+          badgeColor: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+        },
       ],
     },
     {

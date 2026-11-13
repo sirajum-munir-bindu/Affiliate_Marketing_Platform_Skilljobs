@@ -52,7 +52,7 @@ export function StudentHeader({
           </button>
         )}
 
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200 text-xs font-bold text-slate-700">
+        <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200 text-xs font-bold text-slate-700">
           <BookOpen className="w-3.5 h-3.5 text-[#E53945]" />
           <span>এনরোল্ড কোর্স: {enrolledCount} টি</span>
         </div>

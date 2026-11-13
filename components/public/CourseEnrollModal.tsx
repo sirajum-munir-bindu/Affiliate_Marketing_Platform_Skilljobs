@@ -93,11 +93,11 @@ export function CourseEnrollModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden my-auto max-h-[94vh] flex flex-col">
         
         {/* Header */}
-        <div className="bg-[#172033] text-white p-5 flex items-center justify-between">
+        <div className="bg-[#172033] text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#E53945]" />
             <h3 className="font-bold text-sm sm:text-base">কোর্স এনরোলমেন্ট ও পেমেন্ট</h3>
@@ -111,7 +111,7 @@ export function CourseEnrollModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 overflow-y-auto">
           
           {errorMessage && (
             <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">

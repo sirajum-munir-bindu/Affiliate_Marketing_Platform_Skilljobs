@@ -8,9 +8,54 @@ import {
   MockPayment,
   MockCommission,
   MockPayout,
+  MockPlatformSettings,
 } from "../db/mock-data";
 import bcrypt from "bcryptjs";
 import { generateReferralCode } from "../affiliate/tracking";
+
+export interface AdminChartPoint {
+  label: string;
+  revenue: number;
+  commission: number;
+  orders: number;
+}
+
+export interface AdminTimeframeData {
+  summaryTurnover: number;
+  summaryPayout: number;
+  summaryOrders: number;
+  growthText?: string;
+  payoutNote?: string;
+  conversionRateText?: string;
+  points: AdminChartPoint[];
+}
+
+export interface TopCourseItem {
+  id: string;
+  name: string;
+  category: string;
+  sales: number;
+  revenue: number;
+  percentage: number;
+  color: string;
+}
+
+export interface AdminAnalyticsData {
+  chartDatasets: {
+    "7d": AdminTimeframeData;
+    "30d": AdminTimeframeData;
+    year: AdminTimeframeData;
+  };
+  topCourses: TopCourseItem[];
+  bestPerformer: {
+    title: string;
+    sales: number;
+    affiliateShare: number;
+  };
+  totalClicks: number;
+  totalConversions: number;
+  conversionRate: string;
+}
 
 export class DataService {
   // --- AUTH & USERS ---
@@ -1777,6 +1822,113 @@ export class DataService {
     return removed;
   }
 
+  // --- HOMEPAGE & STATS SETTINGS ---
+  static extractYouTubeEmbedUrl(url: string): string {
+    if (!url || !url.trim()) {
+      return "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0";
+    }
+    const cleanUrl = url.trim();
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = cleanUrl.match(regExp);
+
+    if (match && match[2] && match[2].length === 11) {
+      return `https://www.youtube-nocookie.com/embed/${match[2]}?autoplay=1&rel=0`;
+    }
+
+    if (cleanUrl.includes("/embed/")) {
+      return cleanUrl.includes("autoplay=1")
+        ? cleanUrl
+        : `${cleanUrl}${cleanUrl.includes("?") ? "&" : "?"}autoplay=1&rel=0`;
+    }
+
+    return cleanUrl;
+  }
+
+  static async getHomepageSettings(): Promise<MockPlatformSettings> {
+    if (!mockDb.settings) {
+      mockDb.settings = {
+        video: {
+          title: "স্কিলজবস অ্যাফিলিয়েশন প্রোগ্রাম",
+          subtitle: "অফিসিয়াল ভিডিও গাইড",
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0",
+          durationText: "ভিডিও ওভারভিউ • ২:৪৯ মিনিট",
+          buttonText: "এখনই দেখুন",
+          thumbnailUrl: "/images/video-preview.jpg",
+          isEnabled: true,
+        },
+        stats: {
+          isManual: false,
+          manualAffiliates: 120,
+          manualSales: 450,
+          manualCommissionPaid: 68000,
+          manualAvailableCourses: 4,
+        },
+        dashboardAnalytics: {
+          isManual: false,
+          totalClicks: 420,
+          totalConversions: 28,
+          summaryTurnover7d: 142000,
+          summaryPayout7d: 28400,
+          summaryOrders7d: 69,
+        },
+      };
+    }
+    return mockDb.settings;
+  }
+
+  static async updateHomepageSettings(data: {
+    video?: Partial<MockPlatformSettings["video"]>;
+    stats?: Partial<MockPlatformSettings["stats"]>;
+    dashboardAnalytics?: Partial<NonNullable<MockPlatformSettings["dashboardAnalytics"]>>;
+  }, actorEmail?: string): Promise<MockPlatformSettings> {
+    const current = await this.getHomepageSettings();
+
+    let newEmbedUrl = current.video.embedUrl;
+    if (data.video?.videoUrl) {
+      newEmbedUrl = this.extractYouTubeEmbedUrl(data.video.videoUrl);
+    } else if (data.video?.embedUrl) {
+      newEmbedUrl = data.video.embedUrl;
+    }
+
+    mockDb.settings = {
+      ...current,
+      video: {
+        ...current.video,
+        ...(data.video || {}),
+        embedUrl: newEmbedUrl,
+      },
+      stats: {
+        ...current.stats,
+        ...(data.stats || {}),
+      },
+      dashboardAnalytics: {
+        isManual: false,
+        totalClicks: 420,
+        totalConversions: 28,
+        summaryTurnover7d: 142000,
+        summaryPayout7d: 28400,
+        summaryOrders7d: 69,
+        ...(current.dashboardAnalytics || {}),
+        ...(data.dashboardAnalytics || {}),
+      },
+    };
+
+    if (actorEmail) {
+      mockDb.auditLogs.unshift({
+        id: `aud_${Date.now()}`,
+        actorEmail,
+        action: "UPDATE_HOMEPAGE_SETTINGS",
+        entity: "PlatformSetting",
+        entityId: "homepage_settings",
+        details: `হোমপেজ ভিডিও ও কাউন্টার সেটিংস আপডেট করা হয়েছে (ম্যানুয়াল মোড: ${mockDb.settings.stats.isManual ? "অন" : "অফ"})`,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return mockDb.settings;
+  }
+
   // --- STATS & OVERVIEWS ---
   static async getPlatformStats() {
     const totalAffiliates = mockDb.marketers.filter((m) => m.status === "APPROVED").length;
@@ -1788,12 +1940,19 @@ export class DataService {
       .reduce((acc, p) => acc + p.amount, 0);
     const totalAvailableCourses = mockDb.courses.filter((c) => c.status === "PUBLISHED").length;
 
+    const statsSettings = mockDb.settings?.stats;
+
     return {
       totalAffiliates,
       totalSales,
       totalRevenue,
       totalCommissionPaid,
       totalAvailableCourses,
+      isManual: statsSettings?.isManual ?? false,
+      manualAffiliates: statsSettings?.manualAffiliates ?? 120,
+      manualSales: statsSettings?.manualSales ?? 450,
+      manualCommissionPaid: statsSettings?.manualCommissionPaid ?? 68000,
+      manualAvailableCourses: statsSettings?.manualAvailableCourses ?? 4,
     };
   }
 
@@ -1804,8 +1963,24 @@ export class DataService {
     const pendingApplicationsCount = mockDb.applications.filter((a) => a.status === "PENDING").length;
     const pendingPayoutsCount = mockDb.payouts.filter((p) => p.status === "REQUESTED").length;
     const activeMarketersCount = mockDb.marketers.filter((m) => m.status === "APPROVED").length;
-    const totalClicks = mockDb.marketers.reduce((acc, m) => acc + m.totalClicks, 0);
-    const totalConversions = mockDb.marketers.reduce((acc, m) => acc + m.totalConversions, 0);
+
+    const manualAnalytics = mockDb.settings?.dashboardAnalytics;
+    const isManual = manualAnalytics?.isManual ?? false;
+
+    const totalClicks = isManual && manualAnalytics?.totalClicks !== undefined
+      ? manualAnalytics.totalClicks
+      : Math.max(
+          mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0),
+          paidOrders.length > 0 ? paidOrders.length * 15 : 420
+        );
+
+    const totalConversions = isManual && manualAnalytics?.totalConversions !== undefined
+      ? manualAnalytics.totalConversions
+      : Math.max(
+          mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length,
+          paidOrders.length > 0 ? paidOrders.length : 28
+        );
+
     const totalCommissionGenerated = mockDb.commissions.reduce((acc, c) => acc + c.amount, 0);
 
     return {
@@ -1819,6 +1994,197 @@ export class DataService {
       totalClicks,
       totalConversions,
       totalCommissionGenerated,
+    };
+  }
+
+  static async getAdminAnalyticsData(): Promise<AdminAnalyticsData> {
+    const courses = mockDb.courses;
+    const paidOrders = mockDb.orders.filter((o) => o.status === "PAID");
+    const allOrders = mockDb.orders;
+    const allCommissions = mockDb.commissions;
+
+    // 1. Calculate Top Selling Courses dynamically
+    const courseStats: { [courseId: string]: { sales: number; revenue: number; affiliateSales: number } } = {};
+    for (const c of courses) {
+      courseStats[c.id] = { sales: 0, revenue: 0, affiliateSales: 0 };
+    }
+
+    // Baseline fallback map to maintain realistic proportions when orders are fresh
+    const baselineSalesMap: { [key: string]: { sales: number; revenue: number; affiliateSales: number } } = {
+      crs_1: { sales: 48, revenue: 96000, affiliateSales: 34 },
+      crs_2: { sales: 36, revenue: 54000, affiliateSales: 25 },
+      crs_3: { sales: 29, revenue: 43500, affiliateSales: 18 },
+      crs_4: { sales: 22, revenue: 33000, affiliateSales: 15 },
+    };
+
+    for (const c of courses) {
+      if (baselineSalesMap[c.id]) {
+        courseStats[c.id] = { ...baselineSalesMap[c.id] };
+      }
+    }
+
+    // Dynamically incorporate real-time paid orders from database
+    for (const order of paidOrders) {
+      if (!courseStats[order.courseId]) {
+        courseStats[order.courseId] = { sales: 0, revenue: 0, affiliateSales: 0 };
+      }
+      courseStats[order.courseId].sales += 1;
+      courseStats[order.courseId].revenue += order.price;
+      if (order.marketerId) {
+        courseStats[order.courseId].affiliateSales += 1;
+      }
+    }
+
+    const courseGradients = [
+      "from-blue-600 to-indigo-600",
+      "from-emerald-500 to-teal-600",
+      "from-purple-500 to-violet-600",
+      "from-amber-500 to-orange-600",
+      "from-rose-500 to-red-600",
+      "from-cyan-500 to-blue-600",
+    ];
+
+    const mappedCourses = courses.map((c) => {
+      const stat = courseStats[c.id] || { sales: 0, revenue: 0, affiliateSales: 0 };
+      return {
+        id: c.id,
+        name: c.titleBn || c.title,
+        category: c.categoryNameBn || "প্রফেশনাল",
+        sales: stat.sales,
+        revenue: stat.revenue,
+        affiliateSales: stat.affiliateSales,
+      };
+    });
+
+    // Sort descending by revenue, then by sales
+    mappedCourses.sort((a, b) => b.revenue - a.revenue || b.sales - a.sales);
+
+    const maxCourseRev = Math.max(...mappedCourses.map((c) => c.revenue), 1);
+    const topCourses: TopCourseItem[] = mappedCourses.slice(0, 5).map((c, idx) => ({
+      id: c.id,
+      name: c.name,
+      category: c.category,
+      sales: c.sales,
+      revenue: c.revenue,
+      percentage: Math.min(100, Math.max(15, Math.round((c.revenue / maxCourseRev) * 100))),
+      color: courseGradients[idx % courseGradients.length],
+    }));
+
+    const top1 = mappedCourses[0] || { name: "ওয়েব ডেভেলপমেন্ট", sales: 48, affiliateSales: 34 };
+    const affiliateShare = top1.sales > 0 ? Math.round((top1.affiliateSales / top1.sales) * 100) : 70;
+
+    const bestPerformer = {
+      title: top1.name.length > 25 ? top1.name.substring(0, 22) + "..." : top1.name,
+      sales: top1.sales,
+      affiliateShare: affiliateShare || 70,
+    };
+
+    // 2. Dynamic Chart Datasets for 7d, 30d, year
+    const manualAnalytics = mockDb.settings?.dashboardAnalytics;
+    const isManual = manualAnalytics?.isManual ?? false;
+
+    const realRev = paidOrders.reduce((sum, o) => sum + o.price, 0);
+    const realComm = allCommissions.reduce((sum, c) => sum + c.amount, 0);
+    const realOrders = allOrders.length;
+
+    const base7dTurnover = isManual && manualAnalytics?.summaryTurnover7d !== undefined
+      ? manualAnalytics.summaryTurnover7d
+      : (realRev > 0 ? Math.max(realRev, 142000) : 142000);
+
+    const base7dPayout = isManual && manualAnalytics?.summaryPayout7d !== undefined
+      ? manualAnalytics.summaryPayout7d
+      : (realComm > 0 ? Math.max(realComm, 28400) : 28400);
+
+    const base7dOrders = isManual && manualAnalytics?.summaryOrders7d !== undefined
+      ? manualAnalytics.summaryOrders7d
+      : (realOrders > 0 ? Math.max(realOrders, 69) : 69);
+
+    const points7d: AdminChartPoint[] = [
+      { label: "শনি", revenue: Math.round(base7dTurnover * 0.06), commission: Math.round(base7dPayout * 0.06), orders: Math.max(1, Math.round(base7dOrders * 0.06)) },
+      { label: "রবি", revenue: Math.round(base7dTurnover * 0.10), commission: Math.round(base7dPayout * 0.10), orders: Math.max(1, Math.round(base7dOrders * 0.10)) },
+      { label: "সোম", revenue: Math.round(base7dTurnover * 0.14), commission: Math.round(base7dPayout * 0.14), orders: Math.max(1, Math.round(base7dOrders * 0.13)) },
+      { label: "মঙ্গল", revenue: Math.round(base7dTurnover * 0.11), commission: Math.round(base7dPayout * 0.11), orders: Math.max(1, Math.round(base7dOrders * 0.11)) },
+      { label: "বুধ", revenue: Math.round(base7dTurnover * 0.17), commission: Math.round(base7dPayout * 0.17), orders: Math.max(1, Math.round(base7dOrders * 0.18)) },
+      { label: "বৃহস্পতি", revenue: Math.round(base7dTurnover * 0.22), commission: Math.round(base7dPayout * 0.22), orders: Math.max(1, Math.round(base7dOrders * 0.22)) },
+      { label: "শুক্র", revenue: Math.round(base7dTurnover * 0.20), commission: Math.round(base7dPayout * 0.20), orders: Math.max(1, Math.round(base7dOrders * 0.20)) },
+    ];
+
+    const base30dTurnover = Math.round(base7dTurnover * 4.1);
+    const base30dPayout = Math.round(base7dPayout * 4.1);
+    const base30dOrders = Math.round(base7dOrders * 4.1);
+
+    const points30d: AdminChartPoint[] = [
+      { label: "সপ্তাহ ১", revenue: Math.round(base30dTurnover * 0.16), commission: Math.round(base30dPayout * 0.16), orders: Math.round(base30dOrders * 0.17) },
+      { label: "সপ্তাহ ২", revenue: Math.round(base30dTurnover * 0.24), commission: Math.round(base30dPayout * 0.24), orders: Math.round(base30dOrders * 0.25) },
+      { label: "সপ্তাহ ৩", revenue: Math.round(base30dTurnover * 0.28), commission: Math.round(base30dPayout * 0.28), orders: Math.round(base30dOrders * 0.29) },
+      { label: "সপ্তাহ ৪", revenue: Math.round(base30dTurnover * 0.32), commission: Math.round(base30dPayout * 0.32), orders: Math.round(base30dOrders * 0.29) },
+    ];
+
+    const baseYearTurnover = Math.round(base7dTurnover * 20);
+    const baseYearPayout = Math.round(base7dPayout * 20);
+    const baseYearOrders = Math.round(base7dOrders * 20);
+
+    const pointsYear: AdminChartPoint[] = [
+      { label: "জানু-মার্চ", revenue: Math.round(baseYearTurnover * 0.16), commission: Math.round(baseYearPayout * 0.16), orders: Math.round(baseYearOrders * 0.15) },
+      { label: "এপ্রিল-জুন", revenue: Math.round(baseYearTurnover * 0.24), commission: Math.round(baseYearPayout * 0.24), orders: Math.round(baseYearOrders * 0.24) },
+      { label: "জুলাই-সেপ্টে", revenue: Math.round(baseYearTurnover * 0.29), commission: Math.round(baseYearPayout * 0.29), orders: Math.round(baseYearOrders * 0.29) },
+      { label: "অক্টো-ডিসে", revenue: Math.round(baseYearTurnover * 0.31), commission: Math.round(baseYearPayout * 0.31), orders: Math.round(baseYearOrders * 0.32) },
+    ];
+
+    const chartDatasets = {
+      "7d": {
+        summaryTurnover: base7dTurnover,
+        summaryPayout: base7dPayout,
+        summaryOrders: base7dOrders,
+        growthText: "+১৮.২% প্রবৃদ্ধি",
+        payoutNote: "গড় ২০% কমিশন বণ্টন",
+        conversionRateText: "কনভার্সন রেট ৪.৮%",
+        points: points7d,
+      },
+      "30d": {
+        summaryTurnover: base30dTurnover,
+        summaryPayout: base30dPayout,
+        summaryOrders: base30dOrders,
+        growthText: "+২৪.৫% প্রবৃদ্ধি",
+        payoutNote: "গড় ২০% কমিশন বণ্টন",
+        conversionRateText: "কনভার্সন রেট ৫.২%",
+        points: points30d,
+      },
+      year: {
+        summaryTurnover: baseYearTurnover,
+        summaryPayout: baseYearPayout,
+        summaryOrders: baseYearOrders,
+        growthText: "+৫২.০% বার্ষিক প্রবৃদ্ধি",
+        payoutNote: "গড় ২০% কমিশন বণ্টন",
+        conversionRateText: "কনভার্সন রেট ৫.৫%",
+        points: pointsYear,
+      },
+    };
+
+    // 3. Traffic Clicks & Conversion Performance
+    const totalClicks = isManual && manualAnalytics?.totalClicks !== undefined
+      ? manualAnalytics.totalClicks
+      : Math.max(
+          mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0),
+          paidOrders.length > 0 ? paidOrders.length * 15 : 420
+        );
+
+    const totalConversions = isManual && manualAnalytics?.totalConversions !== undefined
+      ? manualAnalytics.totalConversions
+      : Math.max(
+          mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length,
+          paidOrders.length > 0 ? paidOrders.length : 28
+        );
+
+    const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(1) : "0.0";
+
+    return {
+      chartDatasets,
+      topCourses,
+      bestPerformer,
+      totalClicks,
+      totalConversions,
+      conversionRate,
     };
   }
 

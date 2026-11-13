@@ -102,8 +102,8 @@ export function StudentPaymentsClient({ initialPayments, paidOrderIds }: Props) 
       )}
 
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse text-xs min-w-[680px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B] font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4">অর্ডার নং</th>
@@ -193,12 +193,12 @@ export function StudentPaymentsClient({ initialPayments, paidOrderIds }: Props) 
 
       {/* RESUBMIT TRXID MODAL */}
       {resubmitTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isSubmitting && setResubmitTarget(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-black text-base text-slate-900">

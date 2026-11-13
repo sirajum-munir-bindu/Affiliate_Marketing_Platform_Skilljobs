@@ -52,7 +52,7 @@ export function CourseDetailClient({
 
   return (
     <>
-      <div className="sticky top-28 bg-white rounded-2xl border border-[#E2E8F0] shadow-lg overflow-hidden space-y-6 p-6">
+      <div className="sticky top-28 bg-white rounded-2xl border border-[#E2E8F0] shadow-lg overflow-hidden space-y-4 sm:space-y-6 p-4 sm:p-6">
         {/* Course Thumbnail */}
         <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100">
           <img
@@ -79,11 +79,11 @@ export function CourseDetailClient({
 
         {/* Pricing Box */}
         <div className="space-y-2">
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-black text-[#172033]">
+          <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+            <span className="text-2xl sm:text-3xl font-black text-[#172033]">
               {formatBDT(course.price)}
             </span>
-            <span className="text-base text-[#64748B] line-through">
+            <span className="text-sm sm:text-base text-[#64748B] line-through">
               {formatBDT(course.originalPrice)}
             </span>
             <span className="text-xs font-bold text-[#E53945] bg-red-50 px-2 py-0.5 rounded">
@@ -105,10 +105,10 @@ export function CourseDetailClient({
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="w-full py-4 px-4 rounded-xl bg-[#E53945] hover:bg-[#D12B37] text-white font-extrabold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 sm:py-4 px-4 rounded-xl bg-[#E53945] hover:bg-[#D12B37] text-white font-extrabold text-sm sm:text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>এখনই ভর্তি হোন (bKash)</span>
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           {/* Share button ONLY visible when an Affiliate / Marketer is logged in */}
@@ -116,7 +116,7 @@ export function CourseDetailClient({
             <button
               type="button"
               onClick={handleShare}
-              className="w-full py-2.5 px-4 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-xs font-bold text-[#2563EB] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-xs font-bold text-[#2563EB] transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               {copied ? (
                 <Check className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -127,6 +127,30 @@ export function CourseDetailClient({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Mobile Floating Sticky Bottom CTA Bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 z-40 shadow-2xl flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-black text-[#172033]">
+              {formatBDT(course.price)}
+            </span>
+            <span className="text-[11px] text-[#64748B] line-through">
+              {formatBDT(course.originalPrice)}
+            </span>
+          </div>
+          <p className="text-[10px] text-emerald-600 font-bold truncate">লাইফটাইম অ্যাক্সেস</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="py-2.5 px-4 rounded-xl bg-[#E53945] hover:bg-[#D12B37] text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+        >
+          <span>এখনই ভর্তি হোন</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       <CourseEnrollModal

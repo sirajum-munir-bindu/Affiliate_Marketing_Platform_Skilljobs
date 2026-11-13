@@ -431,8 +431,8 @@ export function MarketerManagementClient({
 
       {/* Marketers Table */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse text-xs min-w-[760px]">
             <thead>
               <tr className="bg-slate-50/90 border-b border-slate-200 text-[#64748B] font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">মার্কেটার</th>
@@ -574,14 +574,14 @@ export function MarketerManagementClient({
 
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isSubmitting && setIsModalOpen(false)}
           />
 
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-red-50 text-[#E53945] flex items-center justify-center">
                   {editingMarketer ? <Edit3 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
@@ -892,13 +892,13 @@ export function MarketerManagementClient({
 
       {/* VIEW DETAILS MODAL */}
       {viewingMarketer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => setViewingMarketer(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
               <div>
                 <h3 className="font-black text-base text-slate-900">
                   {viewingMarketer.userName}
@@ -916,7 +916,7 @@ export function MarketerManagementClient({
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100">
                   <p className="text-[10px] font-bold text-slate-500">রেফারেল কোড</p>
@@ -1005,12 +1005,12 @@ export function MarketerManagementClient({
 
       {/* DELETE CONFIRMATION MODAL */}
       {marketerToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isDeleting && setMarketerToDelete(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                 <Trash2 className="w-6 h-6" />

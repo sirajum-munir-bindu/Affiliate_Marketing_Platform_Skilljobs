@@ -53,8 +53,8 @@ export default function AffiliateApplyPage() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
       <Navbar />
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-8 sm:p-12 space-y-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-xl p-5 sm:p-8 md:p-12 space-y-6 sm:space-y-8">
           
           {/* Header */}
           <div className="text-center space-y-2 max-w-lg mx-auto">

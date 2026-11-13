@@ -8,19 +8,19 @@ export function Footer() {
       
       {/* Final Conversion CTA Banner */}
       <div className="border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="bg-gradient-to-r from-[#E53945] to-[#D12B37] rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden shadow-2xl">
-            <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+          <div className="bg-gradient-to-r from-[#E53945] to-[#D12B37] rounded-3xl p-6 sm:p-10 md:p-12 text-center text-white relative overflow-hidden shadow-2xl">
+            <div className="relative z-10 max-w-2xl mx-auto space-y-3 sm:space-y-4">
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight">
                 আজই শুরু করুন আপনার অ্যাফিলিয়েট যাত্রা
               </h2>
-              <p className="text-sm sm:text-base text-red-100">
+              <p className="text-xs sm:text-base text-red-100">
                 কোনো ইনভেস্টমেন্ট ছাড়াই শুরু করুন এবং প্রতি সফল বিক্রয়ে সর্বোচ্চ ৩৫% পর্যন্ত নিশ্চিত কমিশন উপভোগ করুন।
               </p>
               <div className="pt-2">
                 <Link
                   href="/register?role=affiliate"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-[#E53945] font-extrabold text-sm hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-white text-[#E53945] font-extrabold text-xs sm:text-sm hover:bg-slate-100 shadow-lg hover:shadow-xl transition-all"
                 >
                   <span>অ্যাফিলিয়েট হিসেবে যোগ দিন</span>
                   <ArrowRight className="w-4 h-4" />
@@ -32,8 +32,8 @@ export function Footer() {
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10">
           
           {/* Brand Info (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
@@ -92,7 +92,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-400">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#2563EB] shrink-0" />
-                <a href="mailto:corporate2@skill.jobs" className="hover:text-white transition-colors">corporate2@skill.jobs</a>
+                <a href="mailto:corporate2@skill.jobs" className="hover:text-white transition-colors break-all">corporate2@skill.jobs</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#16A34A] shrink-0" />

@@ -310,8 +310,8 @@ export function PaymentVerificationTable({ initialPayments }: Props) {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full text-left border-collapse text-xs min-w-[780px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B] font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">অর্ডার নং</th>
@@ -504,12 +504,12 @@ export function PaymentVerificationTable({ initialPayments }: Props) {
 
       {/* APPROVE CONFIRMATION MODAL */}
       {paymentToApprove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !loadingId && setPaymentToApprove(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start gap-3.5">
               <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
@@ -580,12 +580,12 @@ export function PaymentVerificationTable({ initialPayments }: Props) {
 
       {/* REVERT MISTAKEN APPROVAL MODAL */}
       {paymentToRevert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isReverting && setPaymentToRevert(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start gap-3.5">
               <div className="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                 <ShieldAlert className="w-6 h-6" />
@@ -675,12 +675,12 @@ export function PaymentVerificationTable({ initialPayments }: Props) {
       )}
       {/* RESOLVE REJECTED PAYMENT MODAL */}
       {paymentToResolve && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isResolving && setPaymentToResolve(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start gap-3.5">
               <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6" />
@@ -768,12 +768,12 @@ export function PaymentVerificationTable({ initialPayments }: Props) {
       )}
       {/* DELETE CONFIRMATION MODAL */}
       {paymentToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs"
             onClick={() => !isDeleting && setPaymentToDelete(null)}
           />
-          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
                 <Trash2 className="w-6 h-6" />
