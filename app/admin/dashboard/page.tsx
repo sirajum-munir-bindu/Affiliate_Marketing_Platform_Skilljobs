@@ -28,6 +28,8 @@ import {
   UserCheck
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const stats = await DataService.getAdminOverviewStats();
   const applications = await DataService.getAffiliateApplications();
@@ -165,7 +167,7 @@ export default async function AdminDashboardPage() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
-              স্বাগতম, Super Admin 👋
+              স্বাগতম, Super Admin
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">

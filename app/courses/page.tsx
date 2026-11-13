@@ -3,16 +3,41 @@ import { Footer } from "@/components/public/Footer";
 import { DataService } from "@/lib/services/data-service";
 import { getSession } from "@/lib/auth/session";
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { BookOpen, Clock, Search, Filter } from "lucide-react";
+import {
+  processAffiliateClick,
+  extractRequestContext,
+  isPrefetchRequest,
+} from "@/lib/affiliate/tracking";
 
 export const dynamic = "force-dynamic";
 
 export default async function CoursesPage({
   searchParams,
 }: {
-  searchParams: { category?: string; q?: string };
+  searchParams: { category?: string; q?: string; ref?: string };
 }) {
+  if (searchParams.ref) {
+    const reqHeaders = headers();
+    if (!isPrefetchRequest(reqHeaders)) {
+      const cleanRef = searchParams.ref.trim().toUpperCase();
+      const ctx = extractRequestContext(reqHeaders);
+      try {
+        await processAffiliateClick({
+          referralCode: cleanRef,
+          landingPage: searchParams.category
+            ? `/courses?category=${searchParams.category}`
+            : "/courses",
+          ...ctx,
+        });
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
   const session = await getSession();
   const isMarketer = Boolean(
     session && (session.role === "AFFILIATE" || session.role === "ADMIN")

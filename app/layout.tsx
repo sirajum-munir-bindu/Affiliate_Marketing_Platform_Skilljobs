@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AffiliateClickTracker } from "@/components/public/AffiliateClickTracker";
 
 export const metadata: Metadata = {
   title: "স্কিলজবস অ্যাফিলিয়েট | বাংলাদেশের বিশ্বস্ত এডুকেশনাল অ্যাফিলিয়েট প্ল্যাটফর্ম",
@@ -8,11 +9,11 @@ export const metadata: Metadata = {
   keywords: ["affiliate marketing bangladesh", "online course affiliate", "bKash affiliate income", "skilljobs bd"],
   icons: {
     icon: [
-      { url: "/icon.png?v=2", type: "image/png" },
-      { url: "/favicon.ico?v=2" },
+      { url: "/icon.png?v=5", type: "image/png" },
+      { url: "/favicon.ico?v=5", type: "image/x-icon" },
     ],
-    shortcut: "/favicon.ico?v=2",
-    apple: "/apple-touch-icon.png?v=2",
+    shortcut: "/favicon.ico?v=5",
+    apple: "/apple-touch-icon.png?v=5",
   },
   openGraph: {
     title: "স্কিলজবস অ্যাফিলিয়েট প্ল্যাটফর্ম - আপনার পরিচিতির নেটওয়ার্কই হোক আয়ের নতুন সুযোগ",
@@ -30,9 +31,6 @@ export default function RootLayout({
   return (
     <html lang="bn">
       <head>
-        <link rel="icon" type="image/png" href="/icon.png?v=2" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -41,6 +39,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#F8FAFC] text-[#172033] antialiased">
+        <AffiliateClickTracker />
         {children}
       </body>
     </html>

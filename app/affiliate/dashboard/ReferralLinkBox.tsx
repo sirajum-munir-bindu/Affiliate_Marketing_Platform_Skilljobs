@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { MockCourse } from "@/lib/db/mock-data";
-import { Copy, Check, Link as LinkIcon, Share2 } from "lucide-react";
+import { formatBDT } from "@/lib/utilities/cn";
+import { Copy, Check, Link as LinkIcon } from "lucide-react";
 
 interface Props {
   referralCode: string;
@@ -13,35 +14,44 @@ export function ReferralLinkBox({ referralCode, courses }: Props) {
   const [selectedCourseSlug, setSelectedCourseSlug] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://skilljobs.com";
-  
+  const baseUrl =
+    typeof window !== "undefined" ? window.location.origin : "https://skilljobs.com";
+
+  const selectedCourse = courses.find((c) => c.slug === selectedCourseSlug);
+
   const generatedLink = selectedCourseSlug
     ? `${baseUrl}/courses/${selectedCourseSlug}?ref=${referralCode}`
     : `${baseUrl}/courses?ref=${referralCode}`;
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#2563EB]/30 p-6 shadow-sm space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center">
-            <LinkIcon className="w-4 h-4" />
+    <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md transition-shadow space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#2563EB] border border-blue-100 flex items-center justify-center shrink-0">
+            <LinkIcon className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-[#172033]">আপনার ইউনিক রেফারেল লিংক জেনারেটর</h3>
-            <p className="text-xs text-[#64748B]">যেকোনো কোর্স সিলেক্ট করে সরাসরি ট্র্যাকিং লিংক তৈরি ও কপি করুন</p>
+            <h3 className="font-black text-base text-slate-900 tracking-tight">
+              আপনার ইউনিক রেফারেল লিংক জেনারেটর
+            </h3>
+            <p className="text-xs text-slate-500">
+              যেকোনো কোর্স সিলেক্ট করে সরাসরি ট্র্যাকিং লিংক তৈরি ও কপি করুন
+            </p>
           </div>
         </div>
 
         <select
           value={selectedCourseSlug}
           onChange={(e) => setSelectedCourseSlug(e.target.value)}
-          className="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:border-[#2563EB]"
+          className="text-xs font-bold text-slate-700 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:outline-hidden focus:border-blue-500 cursor-pointer"
         >
           <option value="">সকল কোর্স পেজ (ডিফল্ট)</option>
           {courses.map((c) => (
@@ -52,27 +62,32 @@ export function ReferralLinkBox({ referralCode, courses }: Props) {
         </select>
       </div>
 
-      <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200/90">
         <input
           type="text"
           readOnly
           value={generatedLink}
-          className="w-full bg-transparent font-mono text-xs text-[#172033] font-bold focus:outline-none px-2"
+          className="w-full bg-transparent font-mono text-xs text-slate-800 font-bold focus:outline-none px-3 py-1.5"
         />
         <button
           type="button"
           onClick={copyToClipboard}
-          className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#E53945] to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-black text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 shadow-md shadow-red-500/20 cursor-pointer"
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copied ? "কপি হয়েছে!" : "লিংক কপি করুন"}</span>
         </button>
       </div>
 
-      <div className="flex items-center gap-4 text-[11px] text-[#64748B]">
-        <span>✓ ৩০ দিনের অটোমেটিক কুকি ট্র্যাকিং সক্রিয়</span>
-        <span>✓ লাস্ট-ক্লিক অ্যাট্রিবিউশন গ্যারান্টি</span>
-      </div>
+      {selectedCourse && (
+        <div className="flex justify-end text-[11px] pt-1">
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-black">
+            প্রতি সেলে আয়:{" "}
+            {formatBDT(Math.round((selectedCourse.price * selectedCourse.commissionRate) / 100))}{" "}
+            ({selectedCourse.commissionRate}%)
+          </span>
+        </div>
+      )}
     </div>
   );
 }

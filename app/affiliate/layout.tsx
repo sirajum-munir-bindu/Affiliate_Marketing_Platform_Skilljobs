@@ -1,7 +1,21 @@
-import { AffiliateSidebar } from "@/components/affiliate/AffiliateSidebar";
+import type { Metadata } from "next";
+import { AffiliateLayoutClient } from "@/components/affiliate/AffiliateLayoutClient";
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { DataService } from "@/lib/services/data-service";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: "/icon.png?v=5", type: "image/png" },
+      { url: "/favicon.ico?v=5", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico?v=5",
+    apple: "/apple-touch-icon.png?v=5",
+  },
+};
 
 export default async function AffiliateLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -15,29 +29,22 @@ export default async function AffiliateLayout({ children }: { children: React.Re
   }
 
   const marketer = await DataService.getMarketerByUserId(session.userId);
+  const [payouts, commissions] = await Promise.all([
+    DataService.getMarketerPayouts(marketer?.id || ""),
+    DataService.getMarketerCommissions(marketer?.id || ""),
+  ]);
+  const pendingPayoutsCount = payouts.filter((p) => p.status === "REQUESTED").length;
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
-      <AffiliateSidebar referralCode={marketer?.referralCode} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-[#E2E8F0] px-6 flex items-center justify-between sticky top-0 z-30">
-          <div>
-            <h2 className="text-sm font-bold text-[#172033]">
-              স্বাগতম, {session.name}
-            </h2>
-            <p className="text-[11px] text-[#64748B]">অ্যাফিলিয়েট পার্টনার ড্যাশবোর্ড</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-[#16A34A] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              সক্রিয় ভেরিফাইড পার্টনার
-            </span>
-          </div>
-        </header>
-
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <AffiliateLayoutClient
+      referralCode={marketer?.referralCode || session.referralCode}
+      userName={session.name}
+      userEmail={session.email}
+      currentBalance={marketer?.currentBalance || 0}
+      pendingPayoutsCount={pendingPayoutsCount}
+      commissionsCount={commissions.length}
+    >
+      {children}
+    </AffiliateLayoutClient>
   );
 }

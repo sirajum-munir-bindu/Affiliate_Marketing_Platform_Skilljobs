@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowLeft, User, Mail, Phone, Lock, AlertCircle, Sparkles, Home } from "lucide-react";
+import { ArrowRight, ArrowLeft, User, Mail, Phone, Lock, AlertCircle, Home } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
 function RegisterContent() {
@@ -96,13 +96,6 @@ function RegisterContent() {
             : "স্কিলজবস প্ল্যাটফর্মে শিক্ষার্থী বা মেম্বার হিসেবে যুক্ত হোন"}
         </p>
       </div>
-
-      {isAffiliateIntent && (
-        <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-xs font-semibold text-[#E53945]">
-          <Sparkles className="w-4 h-4 shrink-0" />
-          <span>অ্যাফিলিয়েট রেজিস্ট্রেশনে সর্বোচ্চ ৩৫% কমিশন ও ৩০ দিনের কুকি লাইফটাইম পাবেন।</span>
-        </div>
-      )}
 
       {errorMessage && (
         <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">

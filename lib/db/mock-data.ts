@@ -190,6 +190,19 @@ export interface MockAffiliateApplication {
   createdAt: string;
 }
 
+export interface MockAffiliateClick {
+  id: string;
+  marketerId: string;
+  courseId?: string;
+  courseTitleBn?: string;
+  landingPage: string;
+  ipHash?: string;
+  userAgent?: string;
+  deviceType?: string;
+  referer?: string;
+  createdAt: string;
+}
+
 export interface MockAuditLog {
   id: string;
   actorEmail: string;
@@ -623,10 +636,37 @@ class MockDatabase {
     },
   ];
 
-  clicks: { id: string; marketerId: string; courseId?: string; landingPage: string; createdAt: string }[] = [
-    { id: "clk_1", marketerId: "mkt_1", courseId: "crs_1", landingPage: "/courses/full-stack-web-development-mastery", createdAt: new Date(Date.now() - 3600000 * 24).toISOString() },
-    { id: "clk_2", marketerId: "mkt_1", courseId: "crs_2", landingPage: "/courses/digital-marketing-growth-hacking", createdAt: new Date(Date.now() - 3600000 * 12).toISOString() },
-    { id: "clk_3", marketerId: "mkt_1", courseId: "crs_1", landingPage: "/courses/full-stack-web-development-mastery", createdAt: new Date(Date.now() - 3600000 * 2).toISOString() },
+  clicks: MockAffiliateClick[] = [
+    {
+      id: "clk_1",
+      marketerId: "mkt_1",
+      courseId: "crs_1",
+      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
+      landingPage: "/courses/full-stack-web-development-mastery",
+      deviceType: "ডেস্কটপ",
+      referer: "Facebook",
+      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    },
+    {
+      id: "clk_2",
+      marketerId: "mkt_1",
+      courseId: "crs_2",
+      courseTitleBn: "ডিজিটাল মার্কেটিং ও হাই-কনভার্সন অ্যাড ব্লুপ্রিন্ট",
+      landingPage: "/courses/digital-marketing-growth-hacking",
+      deviceType: "মোবাইল",
+      referer: "YouTube",
+      createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    },
+    {
+      id: "clk_3",
+      marketerId: "mkt_1",
+      courseId: "crs_1",
+      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
+      landingPage: "/courses/full-stack-web-development-mastery",
+      deviceType: "মোবাইল",
+      referer: "ডিরেক্ট ভিজিট",
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
   ];
 
   auditLogs: MockAuditLog[] = [

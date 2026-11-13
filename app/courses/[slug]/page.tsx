@@ -5,8 +5,13 @@ import { DEFAULT_INSTRUCTOR, DEFAULT_LEARNING_OUTCOMES } from "@/lib/db/mock-dat
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import { notFound } from "next/navigation";
 import { Clock, BookOpen, CheckCircle, Award, PlayCircle } from "lucide-react";
+import { headers } from "next/headers";
 import { CourseDetailClient } from "./CourseDetailClient";
-import { processAffiliateClick } from "@/lib/affiliate/tracking";
+import {
+  processAffiliateClick,
+  extractRequestContext,
+  isPrefetchRequest,
+} from "@/lib/affiliate/tracking";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +29,20 @@ export default async function CourseDetailPage({
 
   // Handle Affiliate Attribution if referral code present
   if (searchParams.ref) {
-    const cleanRef = searchParams.ref.trim().toUpperCase();
-    try {
-      await processAffiliateClick({
-        referralCode: cleanRef,
-        courseId: course.id,
-        landingPage: `/courses/${course.slug}`,
-      });
-    } catch {
-      // Safe fallback
+    const reqHeaders = headers();
+    if (!isPrefetchRequest(reqHeaders)) {
+      const cleanRef = searchParams.ref.trim().toUpperCase();
+      const ctx = extractRequestContext(reqHeaders);
+      try {
+        await processAffiliateClick({
+          referralCode: cleanRef,
+          courseId: course.id,
+          landingPage: `/courses/${course.slug}`,
+          ...ctx,
+        });
+      } catch {
+        // Safe fallback
+      }
     }
   }
 

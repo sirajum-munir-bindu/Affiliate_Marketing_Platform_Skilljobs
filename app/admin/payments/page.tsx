@@ -2,6 +2,8 @@ import { mockDb } from "@/lib/db/mock-data";
 import { PaymentVerificationTable } from "./PaymentVerificationTable";
 import { ShieldCheck } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminPaymentsPage() {
   const payments = [...mockDb.payments]
     .map((p) => {

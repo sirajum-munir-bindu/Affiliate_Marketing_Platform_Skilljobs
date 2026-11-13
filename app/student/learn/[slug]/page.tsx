@@ -6,6 +6,8 @@ import { CoursePlayer } from "./CoursePlayer";
 import Link from "next/link";
 import { ArrowLeft, Lock } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentLearnPage({ params }: { params: { slug: string } }) {
   const session = await getSession();
   if (!session) {
@@ -53,17 +55,21 @@ export default async function StudentLearnPage({ params }: { params: { slug: str
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs flex items-center gap-3.5">
         <Link
           href="/student/dashboard"
-          className="p-2 rounded-xl border border-slate-200 hover:bg-white text-slate-600 transition-colors"
+          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <div>
-          <h1 className="text-xl font-extrabold text-[#172033] tracking-tight">{course.titleBn}</h1>
-          <p className="text-xs text-slate-500">{course.categoryNameBn} • স্টুডেন্ট লার্নিং মোড</p>
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-black text-[#172033] tracking-tight truncate">
+            {course.titleBn}
+          </h1>
+          <p className="text-xs text-slate-500">
+            {course.categoryNameBn} • স্টুডেন্ট লার্নিং মোড
+          </p>
         </div>
       </div>
 

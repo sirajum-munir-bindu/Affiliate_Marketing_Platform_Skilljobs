@@ -1,6 +1,8 @@
 import { DataService } from "@/lib/services/data-service";
 import { ApplicationsTable } from "./ApplicationsTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminApplicationsPage() {
   const applications = await DataService.getAffiliateApplications();
 

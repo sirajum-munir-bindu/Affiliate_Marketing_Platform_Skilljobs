@@ -1,40 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { REF_COOKIE_NAME, ATTRIBUTION_DAYS } from "@/lib/affiliate/tracking";
+import {
+  REF_COOKIE_NAME,
+  ATTRIBUTION_DAYS,
+  processAffiliateClick,
+  extractRequestContext,
+  isPrefetchRequest,
+} from "@/lib/affiliate/tracking";
 import { DataService } from "@/lib/services/data-service";
-import { mockDb } from "@/lib/db/mock-data";
 
 export async function GET(req: NextRequest, { params }: { params: { code: string } }) {
   const code = params.code.trim().toUpperCase();
   const url = new URL(req.url);
-  const targetCourseSlug = url.searchParams.get("course");
+  const targetCourseSlug = url.searchParams.get("course")?.trim() || undefined;
 
-  const marketer = await DataService.getMarketerByReferralCode(code);
+  const course = targetCourseSlug
+    ? await DataService.getCourseBySlug(targetCourseSlug)
+    : null;
 
-  let redirectTarget = "/courses";
-  if (targetCourseSlug) {
-    redirectTarget = `/courses/${targetCourseSlug}`;
-  }
+  const redirectTarget = course
+    ? `/courses/${course.slug}`
+    : targetCourseSlug
+    ? `/courses/${targetCourseSlug}`
+    : "/courses";
 
   const response = NextResponse.redirect(new URL(redirectTarget, req.url));
 
-  if (marketer && marketer.status === "APPROVED") {
-    // Increment clicks
-    marketer.totalClicks += 1;
-    mockDb.clicks.push({
-      id: `clk_${Date.now()}`,
-      marketerId: marketer.id,
+  if (!isPrefetchRequest(req.headers)) {
+    const ctx = extractRequestContext(req.headers);
+    const result = await processAffiliateClick({
+      referralCode: code,
+      courseId: course?.id,
+      courseSlug: targetCourseSlug,
       landingPage: redirectTarget,
-      createdAt: new Date().toISOString(),
+      ...ctx,
     });
 
-    // Set 30-day attribution cookie
-    response.cookies.set(REF_COOKIE_NAME, code, {
-      maxAge: ATTRIBUTION_DAYS * 24 * 60 * 60,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
+    if (result.success) {
+      response.cookies.set(REF_COOKIE_NAME, result.referralCode || code, {
+        maxAge: ATTRIBUTION_DAYS * 24 * 60 * 60,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
+    }
   }
 
   return response;

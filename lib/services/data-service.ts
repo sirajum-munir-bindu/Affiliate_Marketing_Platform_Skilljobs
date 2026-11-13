@@ -778,13 +778,16 @@ export class DataService {
   static async approveAffiliateApplication(applicationId: string, reviewerEmail: string) {
     const app = mockDb.applications.find((a) => a.id === applicationId);
     if (!app) throw new Error("Application not found");
+    if (app.status === "APPROVED") throw new Error("আবেদনটি ইতিমধ্যে অনুমোদিত রয়েছে।");
 
     app.status = "APPROVED";
+    app.rejectionReason = undefined;
 
-    // Update user role to AFFILIATE
+    // Update user role to AFFILIATE (preserve ADMIN role if applicable)
     const user = mockDb.users.find((u) => u.id === app.userId);
-    if (user) {
+    if (user && user.role !== "ADMIN") {
       user.role = "AFFILIATE";
+      user.status = "ACTIVE";
     }
 
     // Check or create Marketer Profile
@@ -814,6 +817,9 @@ export class DataService {
       mockDb.marketers.push(profile);
     } else {
       profile.status = "APPROVED";
+      profile.occupation = app.occupation;
+      profile.experience = app.marketingExperience;
+      profile.channels = app.channels;
       profile.approvedAt = new Date().toISOString();
     }
 
@@ -833,6 +839,9 @@ export class DataService {
   static async rejectAffiliateApplication(applicationId: string, reason: string, reviewerEmail: string) {
     const app = mockDb.applications.find((a) => a.id === applicationId);
     if (!app) throw new Error("Application not found");
+    if (app.status === "APPROVED") {
+      throw new Error("অনুমোদিত আবেদন সরাসরি বাতিল করা যাবে না, অনুগ্রহ করে রিভার্স ব্যবহার করুন।");
+    }
     app.status = "REJECTED";
     app.rejectionReason = reason;
 
@@ -849,7 +858,177 @@ export class DataService {
     return app;
   }
 
+  static async revertAffiliateApplication(
+    applicationId: string,
+    options: { targetStatus?: "PENDING" | "REJECTED"; reason?: string },
+    reviewerEmail: string
+  ) {
+    const app = mockDb.applications.find((a) => a.id === applicationId);
+    if (!app) throw new Error("আবেদনটি খুঁজে পাওয়া যায়নি।");
+    if (app.status !== "APPROVED") {
+      throw new Error("শুধুমাত্র অনুমোদিত (APPROVED) আবেদন রিভার্স করা যাবে।");
+    }
+
+    const targetStatus: "PENDING" | "REJECTED" =
+      options.targetStatus === "REJECTED" ? "REJECTED" : "PENDING";
+    const reason =
+      options.reason?.trim() || "ভুলবশত অনুমোদন করা হয়েছিল — রিভার্স করা হয়েছে।";
+
+    app.status = targetStatus;
+    app.rejectionReason = targetStatus === "REJECTED" ? reason : undefined;
+
+    const marketerIndex = mockDb.marketers.findIndex((m) => m.userId === app.userId);
+    if (marketerIndex !== -1) {
+      const profile = mockDb.marketers[marketerIndex];
+      const hasFinancialActivity =
+        profile.totalConversions > 0 ||
+        profile.lifetimeEarnings > 0 ||
+        profile.currentBalance > 0 ||
+        profile.pendingBalance > 0 ||
+        profile.paidEarnings > 0;
+
+      if (hasFinancialActivity) {
+        profile.status = targetStatus === "REJECTED" ? "REJECTED" : "PENDING";
+        if (targetStatus === "REJECTED") {
+          profile.rejectionReason = reason;
+        }
+      } else {
+        mockDb.marketers.splice(marketerIndex, 1);
+      }
+    }
+
+    const user = mockDb.users.find((u) => u.id === app.userId);
+    if (user && user.role === "AFFILIATE") {
+      user.role = "STUDENT";
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: reviewerEmail,
+      action: "AFFILIATE_APPROVAL_REVERTED",
+      entity: "AffiliateApplication",
+      entityId: applicationId,
+      details: `${app.fullName} এর অ্যাফিলিয়েট অনুমোদন রিভার্স করে "${targetStatus}" করা হয়েছে। কারণ: ${reason}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return app;
+  }
+
+  static async resolveRejectedAffiliateApplication(
+    applicationId: string,
+    data: {
+      channels?: string;
+      occupation?: string;
+      marketingExperience?: string;
+      approveNow?: boolean;
+    },
+    reviewerEmail: string
+  ) {
+    const app = mockDb.applications.find((a) => a.id === applicationId);
+    if (!app) throw new Error("আবেদনটি খুঁজে পাওয়া যায়নি।");
+    if (app.status === "APPROVED") {
+      throw new Error("আবেদনটি ইতিমধ্যে অনুমোদিত রয়েছে।");
+    }
+
+    if (data.channels?.trim()) app.channels = data.channels.trim();
+    if (data.occupation?.trim()) app.occupation = data.occupation.trim();
+    if (data.marketingExperience?.trim()) {
+      app.marketingExperience = data.marketingExperience.trim();
+    }
+    app.rejectionReason = undefined;
+
+    if (data.approveNow) {
+      const profile = await this.approveAffiliateApplication(applicationId, reviewerEmail);
+      return { application: app, profile };
+    }
+
+    app.status = "PENDING";
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: reviewerEmail,
+      action: "AFFILIATE_ISSUE_RESOLVED",
+      entity: "AffiliateApplication",
+      entityId: applicationId,
+      details: `${app.fullName} এর অ্যাফিলিয়েট আবেদন আপডেট করে পেন্ডিং রিভিউতে পাঠানো হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { application: app };
+  }
+
+  static async deleteAffiliateApplication(applicationId: string, reviewerEmail: string) {
+    const index = mockDb.applications.findIndex((a) => a.id === applicationId);
+    if (index === -1) throw new Error("আবেদনটি খুঁজে পাওয়া যায়নি।");
+
+    const [deleted] = mockDb.applications.splice(index, 1);
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: reviewerEmail,
+      action: "AFFILIATE_APPLICATION_DELETED",
+      entity: "AffiliateApplication",
+      entityId: applicationId,
+      details: `${deleted.fullName} (${deleted.email}) এর অ্যাফিলিয়েট আবেদন ডিলিট করা হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return deleted;
+  }
+
   // --- ORDERS & BKASH PAYMENTS ---
+  static async getAllOrders() {
+    return [...mockDb.orders].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  private static removeOrderLinkedRecords<T extends { orderId: string }>(
+    list: T[],
+    orderId: string
+  ) {
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (list[i].orderId === orderId) {
+        list.splice(i, 1);
+      }
+    }
+  }
+
+  static async deleteOrder(orderId: string, adminEmail: string) {
+    const index = mockDb.orders.findIndex((o) => o.id === orderId);
+    if (index === -1) {
+      throw new Error("অর্ডার রেকর্ড খুঁজে পাওয়া যায়নি।");
+    }
+
+    const order = mockDb.orders[index];
+    const commissionReversed = this.reverseOrderCommissions(
+      order.id,
+      "এই অর্ডারের কমিশন ইতিমধ্যে মার্কেটারকে পে-আউট করা হয়েছে, তাই অর্ডারটি ডিলিট করা যাবে না।"
+    );
+
+    mockDb.orders.splice(index, 1);
+    this.removeOrderLinkedRecords(mockDb.payments, order.id);
+    this.removeOrderLinkedRecords(mockDb.commissions, order.id);
+
+    if (order.status === "PAID") {
+      this.revokeEnrollmentIfNoOtherPaidOrder(order);
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "ORDER_DELETED",
+      entity: "Order",
+      entityId: orderId,
+      details: `অর্ডার ${order.orderNumber} (${order.customerName}, ৳${order.price}, স্ট্যাটাস: ${order.status}) ডিলিট করা হয়েছে${
+        commissionReversed > 0 ? ` এবং ৳${commissionReversed} কমিশন রিভার্স করা হয়েছে` : ""
+      }।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return order;
+  }
+
   static async createOrder(data: { customerId: string; courseId: string; refCode?: string | null }) {
     const course = await this.getCourseById(data.courseId);
     if (!course) throw new Error("কোর্সটি পাওয়া যায়নি");
@@ -913,9 +1092,14 @@ export class DataService {
     transactionId: string;
     paymentMethod?: "BKASH_MANUAL" | "NAGAD_MANUAL";
     customerNote?: string;
+    customerId?: string;
   }) {
     const order = mockDb.orders.find((o) => o.id === data.orderId);
     if (!order) throw new Error("অর্ডারটি পাওয়া যায়নি");
+
+    if (data.customerId && order.customerId !== data.customerId) {
+      throw new Error("এই অর্ডারের জন্য পেমেন্ট জমা দেওয়ার অনুমতি নেই।");
+    }
 
     if (order.status === "PAID") {
       throw new Error("এই অর্ডারটির মূল্য ইতিমধ্যে পরিশোধ করা হয়েছে।");
@@ -962,11 +1146,15 @@ export class DataService {
 
     const order = mockDb.orders.find((o) => o.id === payment.orderId);
     if (!order) throw new Error("Associated order not found");
+    if (order.status === "PAID") {
+      throw new Error("এই অর্ডারের জন্য ইতিমধ্যে আরেকটি পেমেন্ট অনুমোদিত হয়েছে।");
+    }
 
     const admin = mockDb.users.find((u) => u.email === adminEmail);
 
-    // 1. Mark payment as approved
+    // 1. Mark payment as approved and clear any previous rejection reason
     payment.status = "APPROVED";
+    payment.rejectionReason = undefined;
     payment.reviewedById = admin?.id || "admin";
     payment.reviewedAt = new Date().toISOString();
 
@@ -1052,9 +1240,291 @@ export class DataService {
     return payment;
   }
 
+  private static reverseOrderCommissions(orderId: string, paidErrorMessage: string): number {
+    const orderCommissions = mockDb.commissions.filter(
+      (c) => c.orderId === orderId && c.status !== "REVERSED"
+    );
+    const hasPaidCommission = orderCommissions.some((c) => c.status === "PAID");
+    if (hasPaidCommission) {
+      throw new Error(paidErrorMessage);
+    }
+
+    let commissionReversed = 0;
+    for (const comm of orderCommissions) {
+      comm.status = "REVERSED";
+      commissionReversed += comm.amount;
+
+      const marketer = mockDb.marketers.find((m) => m.id === comm.marketerId);
+      if (marketer) {
+        marketer.totalConversions = Math.max(0, marketer.totalConversions - 1);
+        marketer.lifetimeEarnings = Math.max(0, marketer.lifetimeEarnings - comm.amount);
+        marketer.currentBalance = Math.max(0, marketer.currentBalance - comm.amount);
+      }
+    }
+    return commissionReversed;
+  }
+
+  private static revokeEnrollmentIfNoOtherPaidOrder(order: MockOrder): void {
+    const hasOtherPaidOrder = mockDb.orders.some(
+      (o) =>
+        o.id !== order.id &&
+        o.customerId === order.customerId &&
+        o.courseId === order.courseId &&
+        o.status === "PAID"
+    );
+    if (!hasOtherPaidOrder) {
+      const enrollIdx = mockDb.enrollments.findIndex(
+        (e) => e.customerId === order.customerId && e.courseId === order.courseId
+      );
+      if (enrollIdx !== -1) {
+        mockDb.enrollments.splice(enrollIdx, 1);
+      }
+    }
+  }
+
+  static async revertPaymentApproval(
+    paymentId: string,
+    options: { targetStatus?: "SUBMITTED" | "REJECTED"; reason?: string },
+    adminEmail: string
+  ) {
+    const payment = mockDb.payments.find((p) => p.id === paymentId);
+    if (!payment) throw new Error("পেমেন্ট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    if (payment.status !== "APPROVED") {
+      throw new Error("শুধুমাত্র অনুমোদিত (APPROVED) পেমেন্ট রিভার্স করা যাবে।");
+    }
+
+    const order = mockDb.orders.find((o) => o.id === payment.orderId);
+    if (!order) throw new Error("সংশ্লিষ্ট অর্ডারটি খুঁজে পাওয়া যায়নি।");
+
+    const targetStatus: "SUBMITTED" | "REJECTED" =
+      options.targetStatus === "REJECTED" ? "REJECTED" : "SUBMITTED";
+    const reason =
+      options.reason?.trim() || "ভুলবশত অনুমোদন করা হয়েছিল — রিভার্স করা হয়েছে।";
+
+    // 1. Check and reverse non-reversed commissions for this order
+    const commissionReversed = this.reverseOrderCommissions(
+      order.id,
+      "এই পেমেন্টের কমিশন ইতিমধ্যে মার্কেটারকে পে-আউট করা হয়েছে, তাই অনুমোদন রিভার্স করা যাবে না।"
+    );
+
+    // 2. Update order & payment status first so enrollment check knows this order is no longer PAID
+    const admin = mockDb.users.find((u) => u.email === adminEmail);
+    payment.status = targetStatus;
+    payment.reviewedById = admin?.id || "admin";
+    payment.reviewedAt = new Date().toISOString();
+
+    if (targetStatus === "REJECTED") {
+      payment.rejectionReason = reason;
+      order.status = "PENDING_PAYMENT";
+    } else {
+      payment.rejectionReason = undefined;
+      order.status = "PAYMENT_REVIEW";
+    }
+
+    // 3. Revoke enrollment if student has no other PAID order for this course
+    this.revokeEnrollmentIfNoOtherPaidOrder(order);
+
+    // 4. Write Audit Log
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYMENT_APPROVAL_REVERTED",
+      entity: "Payment",
+      entityId: payment.id,
+      details: `অর্ডার ${order.orderNumber} (TrxID: ${payment.transactionId}) এর ভুল অনুমোদন বাতিল করে "${targetStatus}" করা হয়েছে। কোর্স অ্যাক্সেস প্রত্যাহার${
+        commissionReversed > 0 ? ` ও ৳${commissionReversed} কমিশন রিভার্স` : ""
+      } করা হয়েছে। কারণ: ${reason}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { payment, order, commissionReversed };
+  }
+
+  static async resolveRejectedPayment(
+    paymentId: string,
+    data: {
+      transactionId?: string;
+      senderNumber?: string;
+      approveNow?: boolean;
+    },
+    adminEmail: string
+  ) {
+    const payment = mockDb.payments.find((p) => p.id === paymentId);
+    if (!payment) throw new Error("পেমেন্ট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    if (payment.status === "APPROVED") {
+      throw new Error("এই পেমেন্টটি ইতিমধ্যে অনুমোদিত রয়েছে।");
+    }
+
+    const order = mockDb.orders.find((o) => o.id === payment.orderId);
+    if (!order) throw new Error("সংশ্লিষ্ট অর্ডারটি খুঁজে পাওয়া যায়নি।");
+    if (order.status === "PAID") {
+      throw new Error("এই অর্ডারের জন্য ইতিমধ্যে আরেকটি পেমেন্ট অনুমোদিত হয়েছে।");
+    }
+
+    const nextTrxId = (data.transactionId ?? payment.transactionId).trim().toUpperCase();
+    if (nextTrxId.length < 8) {
+      throw new Error("সঠিক ট্রানজেকশন আইডি (কমপক্ষে ৮ অক্ষর) প্রদান করুন।");
+    }
+
+    const duplicate = mockDb.payments.find(
+      (p) =>
+        p.id !== payment.id &&
+        p.transactionId.toUpperCase() === nextTrxId &&
+        p.status !== "REJECTED"
+    );
+    if (duplicate) {
+      throw new Error("এই ট্রানজেকশন আইডি (TrxID) ইতিমধ্যে অন্য একটি সক্রিয় পেমেন্টে ব্যবহৃত হয়েছে।");
+    }
+
+    if (data.senderNumber?.trim()) {
+      payment.senderNumber = data.senderNumber.trim();
+    }
+    payment.transactionId = nextTrxId;
+    payment.rejectionReason = undefined;
+    payment.status = "SUBMITTED";
+    order.status = "PAYMENT_REVIEW";
+
+    if (data.approveNow) {
+      return await this.approvePayment(payment.id, adminEmail);
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYMENT_ISSUE_RESOLVED",
+      entity: "Payment",
+      entityId: payment.id,
+      details: `অর্ডার ${order.orderNumber} এর সংশোধিত TrxID ${payment.transactionId} আপডেট করে পেন্ডিং রিভিউতে পাঠানো হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return { payment, order };
+  }
+
+  static async deletePayment(paymentId: string, adminEmail: string) {
+    const index = mockDb.payments.findIndex((p) => p.id === paymentId);
+    if (index === -1) {
+      throw new Error("পেমেন্ট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    }
+
+    const payment = mockDb.payments[index];
+    const order = mockDb.orders.find((o) => o.id === payment.orderId);
+
+    let commissionReversed = 0;
+    if (payment.status === "APPROVED" && order) {
+      commissionReversed = this.reverseOrderCommissions(
+        order.id,
+        "এই পেমেন্টের কমিশন ইতিমধ্যে মার্কেটারকে পে-আউট করা হয়েছে, তাই পেমেন্টটি ডিলিট করা যাবে না।"
+      );
+    }
+
+    mockDb.payments.splice(index, 1);
+
+    if (order) {
+      if (payment.status === "APPROVED") {
+        const hasOtherApproved = mockDb.payments.some(
+          (p) => p.orderId === order.id && p.status === "APPROVED"
+        );
+        if (!hasOtherApproved) {
+          const hasSubmitted = mockDb.payments.some(
+            (p) => p.orderId === order.id && p.status === "SUBMITTED"
+          );
+          order.status = hasSubmitted ? "PAYMENT_REVIEW" : "PENDING_PAYMENT";
+          this.revokeEnrollmentIfNoOtherPaidOrder(order);
+        }
+      } else if (order.status === "PAYMENT_REVIEW") {
+        const hasSubmitted = mockDb.payments.some(
+          (p) => p.orderId === order.id && p.status === "SUBMITTED"
+        );
+        if (!hasSubmitted) {
+          order.status = "PENDING_PAYMENT";
+        }
+      }
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYMENT_DELETED",
+      entity: "Payment",
+      entityId: paymentId,
+      details: `অর্ডার ${payment.orderNumber} এর পেমেন্ট রেকর্ড (TrxID: ${payment.transactionId}, ৳${payment.amount}, স্ট্যাটাস: ${payment.status}) ডিলিট করা হয়েছে${
+        commissionReversed > 0 ? ` এবং ৳${commissionReversed} কমিশন রিভার্স করা হয়েছে` : ""
+      }।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return payment;
+  }
+
   // --- COMMISSIONS & PAYOUTS ---
+  static async getAllCommissions() {
+    return [...mockDb.commissions]
+      .map((c) => {
+        const marketer = mockDb.marketers.find((m) => m.id === c.marketerId);
+        const user = marketer ? mockDb.users.find((u) => u.id === marketer.userId) : null;
+        const order = mockDb.orders.find((o) => o.id === c.orderId);
+        return {
+          ...c,
+          marketerName: user?.name || order?.marketerName || c.marketerId,
+          marketerCode: marketer?.referralCode || order?.marketerCode,
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  static async deleteCommission(commissionId: string, adminEmail: string) {
+    const index = mockDb.commissions.findIndex((c) => c.id === commissionId);
+    if (index === -1) {
+      throw new Error("কমিশন রেকর্ড খুঁজে পাওয়া যায়নি।");
+    }
+
+    const target = mockDb.commissions[index];
+    if (target.status === "PAID") {
+      throw new Error("ইতিমধ্যে পে-আউট সম্পন্ন হওয়া (PAID) কমিশন ডিলিট করা যাবে না।");
+    }
+
+    if (target.status === "APPROVED") {
+      const marketer = mockDb.marketers.find((m) => m.id === target.marketerId);
+      if (marketer) {
+        marketer.currentBalance = Math.max(0, marketer.currentBalance - target.amount);
+        marketer.lifetimeEarnings = Math.max(0, marketer.lifetimeEarnings - target.amount);
+        marketer.totalConversions = Math.max(0, marketer.totalConversions - 1);
+      }
+    }
+
+    mockDb.commissions.splice(index, 1);
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "COMMISSION_DELETED",
+      entity: "Commission",
+      entityId: commissionId,
+      details: `অর্ডার ${target.orderNumber} এর ৳${target.amount} কমিশন (${target.status}) লেজার থেকে ডিলিট করা হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return target;
+  }
+
   static async getMarketerCommissions(marketerId: string) {
     return mockDb.commissions.filter((c) => c.marketerId === marketerId);
+  }
+
+  static async getMarketerClicks(marketerId: string) {
+    return mockDb.clicks
+      .filter((c) => c.marketerId === marketerId)
+      .map((c) => {
+        const course = c.courseId
+          ? mockDb.courses.find((crs) => crs.id === c.courseId)
+          : undefined;
+        return {
+          ...c,
+          courseTitleBn: c.courseTitleBn || course?.titleBn,
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   static async getMarketerPayouts(marketerId: string) {
@@ -1101,10 +1571,19 @@ export class DataService {
     return newPayout;
   }
 
+  static async getAllPayouts() {
+    return [...mockDb.payouts].sort(
+      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
+    );
+  }
+
   static async completePayout(payoutId: string, reference: string, adminEmail: string) {
     const payout = mockDb.payouts.find((p) => p.id === payoutId);
     if (!payout) throw new Error("Payout not found");
     if (payout.status === "PAID") throw new Error("Payout already settled");
+    if (payout.status === "REJECTED") {
+      throw new Error("বাতিলকৃত পে-আউট সরাসরি নিষ্পত্তি করা যাবে না, অনুগ্রহ করে সমাধান ও অনুমোদন ব্যবহার করুন।");
+    }
 
     const marketer = mockDb.marketers.find((m) => m.id === payout.marketerId);
     if (marketer) {
@@ -1113,7 +1592,8 @@ export class DataService {
     }
 
     payout.status = "PAID";
-    payout.transactionReference = reference;
+    payout.transactionReference = reference.trim();
+    payout.adminNotes = undefined;
     payout.processedAt = new Date().toISOString();
 
     mockDb.auditLogs.unshift({
@@ -1122,11 +1602,179 @@ export class DataService {
       action: "PAYOUT_COMPLETED",
       entity: "Payout",
       entityId: payout.id,
-      details: `পে-আউট ${payout.payoutNumber} (৳${payout.amount}) সম্পন্ন করা হয়েছে। রেফারেন্স: ${reference}`,
+      details: `পে-আউট ${payout.payoutNumber} (৳${payout.amount}) সম্পন্ন করা হয়েছে। রেফারেন্স: ${payout.transactionReference}`,
       createdAt: new Date().toISOString(),
     });
 
     return payout;
+  }
+
+  static async rejectPayout(payoutId: string, reason: string, adminEmail: string) {
+    const payout = mockDb.payouts.find((p) => p.id === payoutId);
+    if (!payout) throw new Error("পে-আউট রিকোয়েস্ট খুঁজে পাওয়া যায়নি।");
+    if (payout.status === "PAID") {
+      throw new Error("পরিশোধিত পে-আউট সরাসরি বাতিল করা যাবে না, অনুগ্রহ করে রিভার্স ব্যবহার করুন।");
+    }
+    if (payout.status === "REJECTED") {
+      throw new Error("এই পে-আউট রিকোয়েস্টটি ইতিমধ্যে বাতিলকৃত রয়েছে।");
+    }
+
+    const marketer = mockDb.marketers.find((m) => m.id === payout.marketerId);
+    if (marketer) {
+      marketer.pendingBalance = Math.max(0, marketer.pendingBalance - payout.amount);
+      marketer.currentBalance += payout.amount;
+    }
+
+    payout.status = "REJECTED";
+    payout.adminNotes = reason.trim();
+    payout.processedAt = new Date().toISOString();
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYOUT_REJECTED",
+      entity: "Payout",
+      entityId: payout.id,
+      details: `পে-আউট ${payout.payoutNumber} (৳${payout.amount}) বাতিল করা হয়েছে। কারণ: ${reason}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return payout;
+  }
+
+  static async revertPayoutApproval(
+    payoutId: string,
+    options: { targetStatus?: "REQUESTED" | "REJECTED"; reason?: string },
+    adminEmail: string
+  ) {
+    const payout = mockDb.payouts.find((p) => p.id === payoutId);
+    if (!payout) throw new Error("পে-আউট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    if (payout.status !== "PAID") {
+      throw new Error("শুধুমাত্র পরিশোধিত (PAID) পে-আউট রিভার্স করা যাবে।");
+    }
+
+    const targetStatus: "REQUESTED" | "REJECTED" =
+      options.targetStatus === "REJECTED" ? "REJECTED" : "REQUESTED";
+    const reason =
+      options.reason?.trim() || "ভুলবশত পরিশোধিত হিসেবে অনুমোদন করা হয়েছিল।";
+
+    const marketer = mockDb.marketers.find((m) => m.id === payout.marketerId);
+    if (marketer) {
+      marketer.paidEarnings = Math.max(0, marketer.paidEarnings - payout.amount);
+      if (targetStatus === "REQUESTED") {
+        marketer.pendingBalance += payout.amount;
+      } else {
+        marketer.currentBalance += payout.amount;
+      }
+    }
+
+    payout.status = targetStatus;
+    payout.transactionReference = undefined;
+    if (targetStatus === "REJECTED") {
+      payout.adminNotes = reason;
+      payout.processedAt = new Date().toISOString();
+    } else {
+      payout.adminNotes = undefined;
+      payout.processedAt = undefined;
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYOUT_APPROVAL_REVERTED",
+      entity: "Payout",
+      entityId: payout.id,
+      details: `পে-আউট ${payout.payoutNumber} (৳${payout.amount}) এর অনুমোদন রিভার্স করে "${targetStatus}" করা হয়েছে। কারণ: ${reason}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return payout;
+  }
+
+  static async resolveRejectedPayout(
+    payoutId: string,
+    data: {
+      destinationNumber?: string;
+      reference?: string;
+      approveNow?: boolean;
+    },
+    adminEmail: string
+  ) {
+    const payout = mockDb.payouts.find((p) => p.id === payoutId);
+    if (!payout) throw new Error("পে-আউট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    if (payout.status === "PAID") {
+      throw new Error("এই পে-আউটটি ইতিমধ্যে পরিশোধিত রয়েছে।");
+    }
+
+    if (payout.status === "REJECTED") {
+      const marketer = mockDb.marketers.find((m) => m.id === payout.marketerId);
+      if (marketer) {
+        if (marketer.currentBalance < payout.amount) {
+          throw new Error(
+            `মার্কেটারের বর্তমান ব্যালেন্স (৳${marketer.currentBalance}) এই পে-আউট (৳${payout.amount}) পুনরায় সক্রিয় করার জন্য পর্যাপ্ত নয়।`
+          );
+        }
+        marketer.currentBalance -= payout.amount;
+        marketer.pendingBalance += payout.amount;
+      }
+      payout.status = "REQUESTED";
+      payout.adminNotes = undefined;
+      payout.processedAt = undefined;
+    }
+
+    if (data.destinationNumber?.trim()) {
+      payout.destinationNumber = data.destinationNumber.trim();
+    }
+
+    if (data.approveNow) {
+      if (!data.reference?.trim()) {
+        throw new Error("পে-আউট অনুমোদন করতে bKash/Bank ট্রানজেকশন রেফারেন্স প্রদান করুন।");
+      }
+      return await this.completePayout(payout.id, data.reference.trim(), adminEmail);
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYOUT_ISSUE_RESOLVED",
+      entity: "Payout",
+      entityId: payout.id,
+      details: `পে-আউট ${payout.payoutNumber} এর তথ্য আপডেট করে অপেক্ষমাণ (REQUESTED) তালিকায় ফেরত পাঠানো হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return payout;
+  }
+
+  static async deletePayout(payoutId: string, adminEmail: string) {
+    const index = mockDb.payouts.findIndex((p) => p.id === payoutId);
+    if (index === -1) {
+      throw new Error("পে-আউট রেকর্ড খুঁজে পাওয়া যায়নি।");
+    }
+
+    const [removed] = mockDb.payouts.splice(index, 1);
+    const marketer = mockDb.marketers.find((m) => m.id === removed.marketerId);
+    if (marketer) {
+      if (removed.status === "REQUESTED" || removed.status === "APPROVED" || removed.status === "PROCESSING") {
+        marketer.pendingBalance = Math.max(0, marketer.pendingBalance - removed.amount);
+        marketer.currentBalance += removed.amount;
+      } else if (removed.status === "PAID") {
+        marketer.paidEarnings = Math.max(0, marketer.paidEarnings - removed.amount);
+        marketer.currentBalance += removed.amount;
+      }
+    }
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: adminEmail,
+      action: "PAYOUT_DELETED",
+      entity: "Payout",
+      entityId: payoutId,
+      details: `পে-আউট ${removed.payoutNumber} (৳${removed.amount}, স্ট্যাটাস: ${removed.status}) ডিলিট করা হয়েছে।`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return removed;
   }
 
   // --- STATS & OVERVIEWS ---

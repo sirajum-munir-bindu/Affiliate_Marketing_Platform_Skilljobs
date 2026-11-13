@@ -14,8 +14,14 @@ export async function POST(req: Request) {
     const parsed = PaymentSubmitSchema.safeParse(body);
 
     if (!parsed.success) {
+      const flatErrors = parsed.error.flatten().fieldErrors;
+      const firstError =
+        flatErrors.transactionId?.[0] ||
+        flatErrors.senderNumber?.[0] ||
+        flatErrors.orderId?.[0] ||
+        "অনুগ্রহ করে সঠিক পেমেন্ট তথ্য প্রদান করুন।";
       return NextResponse.json(
-        { success: false, errors: parsed.error.flatten().fieldErrors },
+        { success: false, message: firstError, errors: flatErrors },
         { status: 400 }
       );
     }
@@ -25,6 +31,7 @@ export async function POST(req: Request) {
       senderNumber: parsed.data.senderNumber,
       transactionId: parsed.data.transactionId,
       customerNote: parsed.data.customerNote,
+      customerId: session.userId,
     });
 
     return NextResponse.json({

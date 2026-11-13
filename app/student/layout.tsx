@@ -1,6 +1,21 @@
-import { StudentSidebar } from "@/components/student/StudentSidebar";
+import type { Metadata } from "next";
+import { StudentLayoutClient } from "@/components/student/StudentLayoutClient";
 import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
+import { DataService } from "@/lib/services/data-service";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: "/icon.png?v=5", type: "image/png" },
+      { url: "/favicon.ico?v=5", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico?v=5",
+    apple: "/apple-touch-icon.png?v=5",
+  },
+};
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -8,23 +23,27 @@ export default async function StudentLayout({ children }: { children: React.Reac
     redirect("/login?redirect=/student/dashboard");
   }
 
-  return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
-      <StudentSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-[#E2E8F0] px-6 flex items-center justify-between sticky top-0 z-30">
-          <div>
-            <h2 className="text-sm font-bold text-[#172033]">
-              স্বাগতম, {session.name}
-            </h2>
-            <p className="text-[11px] text-[#64748B]">স্টুডেন্ট লার্নিং ড্যাশবোর্ড</p>
-          </div>
-        </header>
+  const data = await DataService.getStudentDashboardData(session.userId);
+  const pendingPaymentsCount = data.payments.filter((p: any) => p.status === "SUBMITTED").length;
+  const rejectedPaymentsCount = data.payments.filter(
+    (p: any) =>
+      p.status === "REJECTED" &&
+      !data.payments.some(
+        (other: any) =>
+          other.orderId === p.orderId &&
+          (other.status === "SUBMITTED" || other.status === "APPROVED")
+      )
+  ).length;
 
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+  return (
+    <StudentLayoutClient
+      userName={session.name}
+      userEmail={session.email}
+      enrolledCount={data.enrolledCourses.length}
+      pendingPaymentsCount={pendingPaymentsCount}
+      rejectedPaymentsCount={rejectedPaymentsCount}
+    >
+      {children}
+    </StudentLayoutClient>
   );
 }
