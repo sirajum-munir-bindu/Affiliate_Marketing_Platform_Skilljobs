@@ -37,7 +37,7 @@ export function AdminHeader({
           <button
             onClick={onToggleSidebar}
             aria-label="Toggle navigation menu"
-            className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="lg:hidden p-2 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 text-slate-700 hover:text-slate-900 transition-all active:scale-95 shadow-2xs"
           >
             <Menu className="w-5 h-5" />
           </button>

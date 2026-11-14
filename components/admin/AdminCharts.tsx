@@ -336,7 +336,13 @@ export function AdminCharts({ totalRevenue, totalCommissions, analyticsData }: A
             {/* Hover Tooltip Overlay */}
             {hoveredPoint !== null && coords[hoveredPoint] && (
               <div
-                className="absolute z-20 pointer-events-none bg-slate-900 text-white p-3 rounded-2xl shadow-xl text-xs space-y-1 border border-slate-700 -translate-x-1/2 -translate-y-full transition-all"
+                className={`absolute z-20 pointer-events-none bg-slate-900 text-white p-3 rounded-2xl shadow-xl text-xs space-y-1 border border-slate-700 -translate-y-full transition-all ${
+                  hoveredPoint === 0
+                    ? "translate-x-0 ml-1"
+                    : hoveredPoint === coords.length - 1
+                    ? "-translate-x-full -ml-1"
+                    : "-translate-x-1/2"
+                }`}
                 style={{
                   left: `${(coords[hoveredPoint].x / svgWidth) * 100}%`,
                   top: `${(coords[hoveredPoint].yRevenue / svgHeight) * 100}%`,

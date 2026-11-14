@@ -9,6 +9,7 @@ import {
   MockCommission,
   MockPayout,
   MockPlatformSettings,
+  MockInstructor,
 } from "../db/mock-data";
 import bcrypt from "bcryptjs";
 import { generateReferralCode } from "../affiliate/tracking";
@@ -333,6 +334,38 @@ export class DataService {
       });
     }
 
+    const processedInstructors: MockInstructor[] = Array.isArray(data.instructors) && data.instructors.length > 0
+      ? data.instructors
+          .map((ins) => ({
+            name: ins.name?.trim() || "",
+            avatar:
+              ins.avatar?.trim() ||
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+            designation: ins.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+            instructorType: (ins.instructorType === "CO" ? "CO" : "LEAD") as "LEAD" | "CO",
+            instructorTypeBn:
+              ins.instructorTypeBn?.trim() ||
+              (ins.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+            description: ins.description?.trim() || "",
+          }))
+          .filter((ins) => Boolean(ins.name))
+      : data.instructor?.name?.trim()
+        ? [
+            {
+              name: data.instructor.name.trim(),
+              avatar:
+                data.instructor.avatar?.trim() ||
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+              designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+              instructorType: (data.instructor.instructorType === "CO" ? "CO" : "LEAD") as "LEAD" | "CO",
+              instructorTypeBn:
+                data.instructor.instructorTypeBn?.trim() ||
+                (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+              description: data.instructor.description?.trim() || "",
+            },
+          ]
+        : [];
+
     const newCourse: MockCourse = {
       id: `crs_${Date.now()}`,
       title: data.title || "New Course",
@@ -356,20 +389,11 @@ export class DataService {
       learningOutcomes: Array.isArray(data.learningOutcomes)
         ? data.learningOutcomes.map((item) => item.trim()).filter(Boolean)
         : undefined,
-      instructor: data.instructor?.name?.trim()
-        ? {
-            name: data.instructor.name.trim(),
-            avatar:
-              data.instructor.avatar?.trim() ||
-              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-            designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
-            instructorType: data.instructor.instructorType === "CO" ? "CO" : "LEAD",
-            instructorTypeBn:
-              data.instructor.instructorTypeBn?.trim() ||
-              (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
-            description: data.instructor.description?.trim() || "",
-          }
+      instructions: Array.isArray(data.instructions)
+        ? data.instructions.map((item) => item.trim()).filter(Boolean)
         : undefined,
+      instructor: processedInstructors[0] || undefined,
+      instructors: processedInstructors.length > 0 ? processedInstructors : undefined,
       modules: Array.isArray(data.modules) ? data.modules : [],
     };
     mockDb.courses.unshift(newCourse);
@@ -399,6 +423,43 @@ export class DataService {
     const nextCategoryNameBn =
       data.categoryNameBn || matchedCat?.nameBn || mockDb.courses[courseIndex].categoryNameBn;
 
+    let processedInstructors: MockInstructor[] | undefined = undefined;
+    if (data.instructors !== undefined) {
+      processedInstructors = Array.isArray(data.instructors)
+        ? data.instructors
+            .map((ins) => ({
+              name: ins.name?.trim() || "",
+              avatar:
+                ins.avatar?.trim() ||
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+              designation: ins.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+              instructorType: (ins.instructorType === "CO" ? "CO" : "LEAD") as "LEAD" | "CO",
+              instructorTypeBn:
+                ins.instructorTypeBn?.trim() ||
+                (ins.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+              description: ins.description?.trim() || "",
+            }))
+            .filter((ins) => Boolean(ins.name))
+        : [];
+    } else if (data.instructor !== undefined) {
+      processedInstructors = data.instructor?.name?.trim()
+        ? [
+            {
+              name: data.instructor.name.trim(),
+              avatar:
+                data.instructor.avatar?.trim() ||
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+              designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
+              instructorType: (data.instructor.instructorType === "CO" ? "CO" : "LEAD") as "LEAD" | "CO",
+              instructorTypeBn:
+                data.instructor.instructorTypeBn?.trim() ||
+                (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
+              description: data.instructor.description?.trim() || "",
+            },
+          ]
+        : [];
+    }
+
     const updated: MockCourse = {
       ...mockDb.courses[courseIndex],
       ...data,
@@ -415,23 +476,18 @@ export class DataService {
         data.learningOutcomes !== undefined
           ? data.learningOutcomes.map((item) => item.trim()).filter(Boolean)
           : mockDb.courses[courseIndex].learningOutcomes,
+      instructions:
+        data.instructions !== undefined
+          ? data.instructions.map((item) => item.trim()).filter(Boolean)
+          : mockDb.courses[courseIndex].instructions,
       instructor:
-        data.instructor !== undefined
-          ? data.instructor?.name?.trim()
-            ? {
-                name: data.instructor.name.trim(),
-                avatar:
-                  data.instructor.avatar?.trim() ||
-                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-                designation: data.instructor.designation?.trim() || "কোর্স ইন্সট্রাক্টর",
-                instructorType: data.instructor.instructorType === "CO" ? "CO" : "LEAD",
-                instructorTypeBn:
-                  data.instructor.instructorTypeBn?.trim() ||
-                  (data.instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"),
-                description: data.instructor.description?.trim() || "",
-              }
-            : undefined
+        processedInstructors !== undefined
+          ? processedInstructors[0] || undefined
           : mockDb.courses[courseIndex].instructor,
+      instructors:
+        processedInstructors !== undefined
+          ? processedInstructors
+          : mockDb.courses[courseIndex].instructors,
       modules: data.modules !== undefined ? data.modules : mockDb.courses[courseIndex].modules,
     };
 
@@ -1244,7 +1300,19 @@ export class DataService {
       }
     }
 
-    // 5. Write Audit Log
+    // 5. Update live analytics history
+    if (mockDb.analyticsHistory?.["7d"]) {
+      const dayOfWeek = new Date().getDay(); // 0: Sun, 6: Sat
+      const mappedDayIdx = (dayOfWeek + 1) % 7; // 0: Sat, 1: Sun, ... 6: Fri
+      const pt = mockDb.analyticsHistory["7d"][mappedDayIdx];
+      if (pt) {
+        pt.revenue += order.price;
+        pt.commission += (order.commissionAmount || 0);
+        pt.orders += 1;
+      }
+    }
+
+    // 6. Write Audit Log
     mockDb.auditLogs.unshift({
       id: `aud_${Date.now()}`,
       actorEmail: adminEmail,
@@ -1859,10 +1927,10 @@ export class DataService {
         },
         stats: {
           isManual: false,
-          manualAffiliates: 120,
-          manualSales: 450,
-          manualCommissionPaid: 68000,
-          manualAvailableCourses: 4,
+          manualAffiliates: 0,
+          manualSales: 0,
+          manualCommissionPaid: 0,
+          manualAvailableCourses: 0,
         },
         dashboardAnalytics: {
           isManual: false,
@@ -1949,10 +2017,10 @@ export class DataService {
       totalCommissionPaid,
       totalAvailableCourses,
       isManual: statsSettings?.isManual ?? false,
-      manualAffiliates: statsSettings?.manualAffiliates ?? 120,
-      manualSales: statsSettings?.manualSales ?? 450,
-      manualCommissionPaid: statsSettings?.manualCommissionPaid ?? 68000,
-      manualAvailableCourses: statsSettings?.manualAvailableCourses ?? 4,
+      manualAffiliates: statsSettings?.manualAffiliates ?? 0,
+      manualSales: statsSettings?.manualSales ?? 0,
+      manualCommissionPaid: statsSettings?.manualCommissionPaid ?? 0,
+      manualAvailableCourses: statsSettings?.manualAvailableCourses ?? totalAvailableCourses,
     };
   }
 
@@ -1969,17 +2037,11 @@ export class DataService {
 
     const totalClicks = isManual && manualAnalytics?.totalClicks !== undefined
       ? manualAnalytics.totalClicks
-      : Math.max(
-          mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0),
-          paidOrders.length > 0 ? paidOrders.length * 15 : 420
-        );
+      : (mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0));
 
     const totalConversions = isManual && manualAnalytics?.totalConversions !== undefined
       ? manualAnalytics.totalConversions
-      : Math.max(
-          mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length,
-          paidOrders.length > 0 ? paidOrders.length : 28
-        );
+      : (mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length);
 
     const totalCommissionGenerated = mockDb.commissions.reduce((acc, c) => acc + c.amount, 0);
 
@@ -2000,30 +2062,14 @@ export class DataService {
   static async getAdminAnalyticsData(): Promise<AdminAnalyticsData> {
     const courses = mockDb.courses;
     const paidOrders = mockDb.orders.filter((o) => o.status === "PAID");
-    const allOrders = mockDb.orders;
-    const allCommissions = mockDb.commissions;
 
-    // 1. Calculate Top Selling Courses dynamically
+    // 1. Calculate Top Selling Courses dynamically strictly from real paid orders
     const courseStats: { [courseId: string]: { sales: number; revenue: number; affiliateSales: number } } = {};
     for (const c of courses) {
       courseStats[c.id] = { sales: 0, revenue: 0, affiliateSales: 0 };
     }
 
-    // Baseline fallback map to maintain realistic proportions when orders are fresh
-    const baselineSalesMap: { [key: string]: { sales: number; revenue: number; affiliateSales: number } } = {
-      crs_1: { sales: 48, revenue: 96000, affiliateSales: 34 },
-      crs_2: { sales: 36, revenue: 54000, affiliateSales: 25 },
-      crs_3: { sales: 29, revenue: 43500, affiliateSales: 18 },
-      crs_4: { sales: 22, revenue: 33000, affiliateSales: 15 },
-    };
-
-    for (const c of courses) {
-      if (baselineSalesMap[c.id]) {
-        courseStats[c.id] = { ...baselineSalesMap[c.id] };
-      }
-    }
-
-    // Dynamically incorporate real-time paid orders from database
+    // Incorporate real-time paid orders from database
     for (const order of paidOrders) {
       if (!courseStats[order.courseId]) {
         courseStats[order.courseId] = { sales: 0, revenue: 0, affiliateSales: 0 };
@@ -2059,104 +2105,165 @@ export class DataService {
     // Sort descending by revenue, then by sales
     mappedCourses.sort((a, b) => b.revenue - a.revenue || b.sales - a.sales);
 
-    const maxCourseRev = Math.max(...mappedCourses.map((c) => c.revenue), 1);
+    const maxCourseRev = Math.max(...mappedCourses.map((c) => c.revenue), 0);
     const topCourses: TopCourseItem[] = mappedCourses.slice(0, 5).map((c, idx) => ({
       id: c.id,
       name: c.name,
       category: c.category,
       sales: c.sales,
       revenue: c.revenue,
-      percentage: Math.min(100, Math.max(15, Math.round((c.revenue / maxCourseRev) * 100))),
+      percentage: maxCourseRev > 0 ? Math.min(100, Math.round((c.revenue / maxCourseRev) * 100)) : 0,
       color: courseGradients[idx % courseGradients.length],
     }));
 
-    const top1 = mappedCourses[0] || { name: "ওয়েব ডেভেলপমেন্ট", sales: 48, affiliateSales: 34 };
-    const affiliateShare = top1.sales > 0 ? Math.round((top1.affiliateSales / top1.sales) * 100) : 70;
+    const top1 = mappedCourses[0];
+    const affiliateShare = (top1 && top1.sales > 0) ? Math.round((top1.affiliateSales / top1.sales) * 100) : 0;
 
-    const bestPerformer = {
-      title: top1.name.length > 25 ? top1.name.substring(0, 22) + "..." : top1.name,
-      sales: top1.sales,
-      affiliateShare: affiliateShare || 70,
-    };
+    const bestPerformer = (top1 && top1.sales > 0)
+      ? {
+          title: top1.name.length > 25 ? top1.name.substring(0, 22) + "..." : top1.name,
+          sales: top1.sales,
+          affiliateShare,
+        }
+      : {
+          title: top1 ? (top1.name.length > 25 ? top1.name.substring(0, 22) + "..." : top1.name) : "—",
+          sales: 0,
+          affiliateShare: 0,
+        };
 
     // 2. Dynamic Chart Datasets for 7d, 30d, year
     const manualAnalytics = mockDb.settings?.dashboardAnalytics;
     const isManual = manualAnalytics?.isManual ?? false;
 
-    const realRev = paidOrders.reduce((sum, o) => sum + o.price, 0);
-    const realComm = allCommissions.reduce((sum, c) => sum + c.amount, 0);
-    const realOrders = allOrders.length;
+    if (!mockDb.analyticsHistory) {
+      mockDb.analyticsHistory = {
+        "7d": [
+          { label: "শনি", revenue: 0, commission: 0, orders: 0 },
+          { label: "রবি", revenue: 0, commission: 0, orders: 0 },
+          { label: "সোম", revenue: 0, commission: 0, orders: 0 },
+          { label: "মঙ্গল", revenue: 0, commission: 0, orders: 0 },
+          { label: "বুধ", revenue: 0, commission: 0, orders: 0 },
+          { label: "বৃহস্পতি", revenue: 0, commission: 0, orders: 0 },
+          { label: "শুক্র", revenue: 0, commission: 0, orders: 0 },
+        ],
+      };
+    }
 
-    const base7dTurnover = isManual && manualAnalytics?.summaryTurnover7d !== undefined
-      ? manualAnalytics.summaryTurnover7d
-      : (realRev > 0 ? Math.max(realRev, 142000) : 142000);
+    let points7d = mockDb.analyticsHistory["7d"].map((pt) => ({ ...pt }));
 
-    const base7dPayout = isManual && manualAnalytics?.summaryPayout7d !== undefined
-      ? manualAnalytics.summaryPayout7d
-      : (realComm > 0 ? Math.max(realComm, 28400) : 28400);
+    let base7dTurnover: number;
+    let base7dPayout: number;
+    let base7dOrders: number;
 
-    const base7dOrders = isManual && manualAnalytics?.summaryOrders7d !== undefined
-      ? manualAnalytics.summaryOrders7d
-      : (realOrders > 0 ? Math.max(realOrders, 69) : 69);
+    if (isManual && manualAnalytics?.summaryTurnover7d !== undefined) {
+      base7dTurnover = manualAnalytics.summaryTurnover7d;
+      base7dPayout = manualAnalytics.summaryPayout7d ?? Math.round(base7dTurnover * 0.2);
+      base7dOrders = manualAnalytics.summaryOrders7d ?? (base7dTurnover > 0 ? Math.max(1, Math.round(base7dTurnover / 2000)) : 0);
 
-    const points7d: AdminChartPoint[] = [
-      { label: "শনি", revenue: Math.round(base7dTurnover * 0.06), commission: Math.round(base7dPayout * 0.06), orders: Math.max(1, Math.round(base7dOrders * 0.06)) },
-      { label: "রবি", revenue: Math.round(base7dTurnover * 0.10), commission: Math.round(base7dPayout * 0.10), orders: Math.max(1, Math.round(base7dOrders * 0.10)) },
-      { label: "সোম", revenue: Math.round(base7dTurnover * 0.14), commission: Math.round(base7dPayout * 0.14), orders: Math.max(1, Math.round(base7dOrders * 0.13)) },
-      { label: "মঙ্গল", revenue: Math.round(base7dTurnover * 0.11), commission: Math.round(base7dPayout * 0.11), orders: Math.max(1, Math.round(base7dOrders * 0.11)) },
-      { label: "বুধ", revenue: Math.round(base7dTurnover * 0.17), commission: Math.round(base7dPayout * 0.17), orders: Math.max(1, Math.round(base7dOrders * 0.18)) },
-      { label: "বৃহস্পতি", revenue: Math.round(base7dTurnover * 0.22), commission: Math.round(base7dPayout * 0.22), orders: Math.max(1, Math.round(base7dOrders * 0.22)) },
-      { label: "শুক্র", revenue: Math.round(base7dTurnover * 0.20), commission: Math.round(base7dPayout * 0.20), orders: Math.max(1, Math.round(base7dOrders * 0.20)) },
-    ];
-
-    const base30dTurnover = Math.round(base7dTurnover * 4.1);
-    const base30dPayout = Math.round(base7dPayout * 4.1);
-    const base30dOrders = Math.round(base7dOrders * 4.1);
+      const curSum = points7d.reduce((s, p) => s + p.revenue, 0);
+      if (curSum > 0) {
+        const scale = base7dTurnover / curSum;
+        points7d = points7d.map((p) => ({
+          ...p,
+          revenue: Math.round(p.revenue * scale),
+          commission: Math.round(p.commission * scale),
+          orders: Math.max(1, Math.round(p.orders * scale)),
+        }));
+      }
+    } else {
+      base7dTurnover = points7d.reduce((s, p) => s + p.revenue, 0);
+      base7dPayout = points7d.reduce((s, p) => s + p.commission, 0);
+      base7dOrders = points7d.reduce((s, p) => s + p.orders, 0);
+    }
 
     const points30d: AdminChartPoint[] = [
-      { label: "সপ্তাহ ১", revenue: Math.round(base30dTurnover * 0.16), commission: Math.round(base30dPayout * 0.16), orders: Math.round(base30dOrders * 0.17) },
-      { label: "সপ্তাহ ২", revenue: Math.round(base30dTurnover * 0.24), commission: Math.round(base30dPayout * 0.24), orders: Math.round(base30dOrders * 0.25) },
-      { label: "সপ্তাহ ৩", revenue: Math.round(base30dTurnover * 0.28), commission: Math.round(base30dPayout * 0.28), orders: Math.round(base30dOrders * 0.29) },
-      { label: "সপ্তাহ ৪", revenue: Math.round(base30dTurnover * 0.32), commission: Math.round(base30dPayout * 0.32), orders: Math.round(base30dOrders * 0.29) },
+      {
+        label: "সপ্তাহ ১",
+        revenue: points7d[0].revenue + points7d[1].revenue,
+        commission: points7d[0].commission + points7d[1].commission,
+        orders: points7d[0].orders + points7d[1].orders,
+      },
+      {
+        label: "সপ্তাহ ২",
+        revenue: points7d[2].revenue + points7d[3].revenue,
+        commission: points7d[2].commission + points7d[3].commission,
+        orders: points7d[2].orders + points7d[3].orders,
+      },
+      {
+        label: "সপ্তাহ ৩",
+        revenue: points7d[4].revenue,
+        commission: points7d[4].commission,
+        orders: points7d[4].orders,
+      },
+      {
+        label: "সপ্তাহ ৪",
+        revenue: points7d[5].revenue + points7d[6].revenue,
+        commission: points7d[5].commission + points7d[6].commission,
+        orders: points7d[5].orders + points7d[6].orders,
+      },
     ];
 
-    const baseYearTurnover = Math.round(base7dTurnover * 20);
-    const baseYearPayout = Math.round(base7dPayout * 20);
-    const baseYearOrders = Math.round(base7dOrders * 20);
+    const base30dTurnover = points30d.reduce((s, p) => s + p.revenue, 0);
+    const base30dPayout = points30d.reduce((s, p) => s + p.commission, 0);
+    const base30dOrders = points30d.reduce((s, p) => s + p.orders, 0);
 
     const pointsYear: AdminChartPoint[] = [
-      { label: "জানু-মার্চ", revenue: Math.round(baseYearTurnover * 0.16), commission: Math.round(baseYearPayout * 0.16), orders: Math.round(baseYearOrders * 0.15) },
-      { label: "এপ্রিল-জুন", revenue: Math.round(baseYearTurnover * 0.24), commission: Math.round(baseYearPayout * 0.24), orders: Math.round(baseYearOrders * 0.24) },
-      { label: "জুলাই-সেপ্টে", revenue: Math.round(baseYearTurnover * 0.29), commission: Math.round(baseYearPayout * 0.29), orders: Math.round(baseYearOrders * 0.29) },
-      { label: "অক্টো-ডিসে", revenue: Math.round(baseYearTurnover * 0.31), commission: Math.round(baseYearPayout * 0.31), orders: Math.round(baseYearOrders * 0.32) },
+      {
+        label: "জানু-মার্চ",
+        revenue: Math.round(base30dTurnover * 0.78),
+        commission: Math.round(base30dPayout * 0.78),
+        orders: Math.round(base30dOrders * 0.77),
+      },
+      {
+        label: "এপ্রিল-জুন",
+        revenue: Math.round(base30dTurnover * 1.17),
+        commission: Math.round(base30dPayout * 1.17),
+        orders: Math.round(base30dOrders * 1.19),
+      },
+      {
+        label: "জুলাই-সেপ্টে",
+        revenue: Math.round(base30dTurnover * 1.41),
+        commission: Math.round(base30dPayout * 1.41),
+        orders: Math.round(base30dOrders * 1.44),
+      },
+      {
+        label: "অক্টো-ডিসে",
+        revenue: Math.round(base30dTurnover * 1.55),
+        commission: Math.round(base30dPayout * 1.55),
+        orders: Math.round(base30dOrders * 1.58),
+      },
     ];
+
+    const baseYearTurnover = pointsYear.reduce((s, p) => s + p.revenue, 0);
+    const baseYearPayout = pointsYear.reduce((s, p) => s + p.commission, 0);
+    const baseYearOrders = pointsYear.reduce((s, p) => s + p.orders, 0);
 
     const chartDatasets = {
       "7d": {
         summaryTurnover: base7dTurnover,
         summaryPayout: base7dPayout,
         summaryOrders: base7dOrders,
-        growthText: "+১৮.২% প্রবৃদ্ধি",
-        payoutNote: "গড় ২০% কমিশন বণ্টন",
-        conversionRateText: "কনভার্সন রেট ৪.৮%",
+        growthText: base7dTurnover > 0 ? "+১৮.২% প্রবৃদ্ধি" : "০% প্রবৃদ্ধি",
+        payoutNote: `গড় ${base7dTurnover > 0 ? Math.round((base7dPayout / base7dTurnover) * 100) : 20}% কমিশন বণ্টন`,
+        conversionRateText: `কনভার্সন রেট ${base7dOrders > 0 ? "৪.৮%" : "০.০%"}`,
         points: points7d,
       },
       "30d": {
         summaryTurnover: base30dTurnover,
         summaryPayout: base30dPayout,
         summaryOrders: base30dOrders,
-        growthText: "+২৪.৫% প্রবৃদ্ধি",
-        payoutNote: "গড় ২০% কমিশন বণ্টন",
-        conversionRateText: "কনভার্সন রেট ৫.২%",
+        growthText: base30dTurnover > 0 ? "+২৪.৫% প্রবৃদ্ধি" : "০% প্রবৃদ্ধি",
+        payoutNote: `গড় ${base30dTurnover > 0 ? Math.round((base30dPayout / base30dTurnover) * 100) : 20}% কমিশন বণ্টন`,
+        conversionRateText: `কনভার্সন রেট ${base30dOrders > 0 ? "৫.২%" : "০.০%"}`,
         points: points30d,
       },
       year: {
         summaryTurnover: baseYearTurnover,
         summaryPayout: baseYearPayout,
         summaryOrders: baseYearOrders,
-        growthText: "+৫২.০% বার্ষিক প্রবৃদ্ধি",
-        payoutNote: "গড় ২০% কমিশন বণ্টন",
-        conversionRateText: "কনভার্সন রেট ৫.৫%",
+        growthText: baseYearTurnover > 0 ? "+৫২.০% বার্ষিক প্রবৃদ্ধি" : "০% প্রবৃদ্ধি",
+        payoutNote: `গড় ${baseYearTurnover > 0 ? Math.round((baseYearPayout / baseYearTurnover) * 100) : 20}% কমিশন বণ্টন`,
+        conversionRateText: `কনভার্সন রেট ${baseYearOrders > 0 ? "৫.৫%" : "০.০%"}`,
         points: pointsYear,
       },
     };
@@ -2164,17 +2271,11 @@ export class DataService {
     // 3. Traffic Clicks & Conversion Performance
     const totalClicks = isManual && manualAnalytics?.totalClicks !== undefined
       ? manualAnalytics.totalClicks
-      : Math.max(
-          mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0),
-          paidOrders.length > 0 ? paidOrders.length * 15 : 420
-        );
+      : (mockDb.marketers.reduce((acc, m) => acc + (m.totalClicks || 0), 0) + (mockDb.clicks?.length || 0));
 
     const totalConversions = isManual && manualAnalytics?.totalConversions !== undefined
       ? manualAnalytics.totalConversions
-      : Math.max(
-          mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length,
-          paidOrders.length > 0 ? paidOrders.length : 28
-        );
+      : (mockDb.marketers.reduce((acc, m) => acc + (m.totalConversions || 0), 0) || paidOrders.length);
 
     const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(1) : "0.0";
 

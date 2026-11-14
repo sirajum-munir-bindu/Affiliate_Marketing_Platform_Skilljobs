@@ -26,28 +26,28 @@ export function StatsCounter({ stats }: StatsProps) {
   const items = [
     {
       label: "সক্রিয় অ্যাফিলিয়েট",
-      value: formatBnNumber(affiliates ?? 120) + "+",
+      value: formatBnNumber(affiliates ?? 0) + (Number(affiliates || 0) > 0 ? "+" : ""),
       icon: Users,
       color: "text-[#2563EB]",
       bg: "bg-blue-50",
     },
     {
       label: "সফল কোর্স বিক্রি",
-      value: formatBnNumber(sales ?? 450) + "+",
+      value: formatBnNumber(sales ?? 0) + (Number(sales || 0) > 0 ? "+" : ""),
       icon: ShoppingBag,
       color: "text-[#E53945]",
       bg: "bg-red-50",
     },
     {
       label: "মোট কমিশন প্রদান",
-      value: formatBDT(commission ?? 68000),
+      value: formatBDT(commission ?? 0),
       icon: Banknote,
       color: "text-[#16A34A]",
       bg: "bg-emerald-50",
     },
     {
       label: "উপলব্ধ প্রফেশনাল কোর্স",
-      value: formatBnNumber(courses ?? 4) + " টি",
+      value: formatBnNumber(courses ?? 0) + " টি",
       icon: BookOpen,
       color: "text-amber-600",
       bg: "bg-amber-50",

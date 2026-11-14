@@ -81,35 +81,19 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Demo Fast Login Pills for Reviewers/Testers */}
-        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-          <div className="text-[11px] font-bold text-[#64748B] flex items-center gap-1.5">
-            <UserCheck className="w-3.5 h-3.5 text-[#2563EB]" />
-            <span>এক ক্লিকে ডেমো একাউন্ট টেস্ট করুন:</span>
+        {/* Admin Fast Login Pill */}
+        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+          <div className="text-[12px] font-bold text-[#64748B] flex items-center gap-1.5">
+            <UserCheck className="w-4 h-4 text-[#2563EB]" />
+            <span>এডমিন এক্সেস:</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => fillQuickLogin("admin@skilljobs.com", "Admin@123456")}
-              className="py-1 px-2 rounded-lg bg-red-100 hover:bg-red-200 text-[#E53945] font-bold text-[11px] transition-colors"
-            >
-              Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => fillQuickLogin("marketer@skilljobs.com", "Password@123456")}
-              className="py-1 px-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-[#2563EB] font-bold text-[11px] transition-colors"
-            >
-              Affiliate
-            </button>
-            <button
-              type="button"
-              onClick={() => fillQuickLogin("student@skilljobs.com", "Password@123456")}
-              className="py-1 px-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-[#16A34A] font-bold text-[11px] transition-colors"
-            >
-              Student
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => fillQuickLogin("admin@skilljobs.com", "Admin@123456")}
+            className="py-1 px-3 rounded-lg bg-red-100 hover:bg-red-200 text-[#E53945] font-bold text-[11px] transition-colors"
+          >
+            Super Admin লগইন
+          </button>
         </div>
 
         {errorMessage && (

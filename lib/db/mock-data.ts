@@ -98,7 +98,9 @@ export interface MockCourse {
   difficulty: string;
   featured: boolean;
   learningOutcomes?: string[];
+  instructions?: string[];
   instructor?: MockInstructor;
+  instructors?: MockInstructor[];
   modules: {
     id: string;
     titleBn: string;
@@ -310,404 +312,29 @@ class MockDatabase {
       status: "ACTIVE",
       createdAt: new Date().toISOString(),
     },
-    {
-      id: "usr_affiliate_1",
-      name: "তানভীর আহমেদ (Top Affiliate)",
-      email: "marketer@skilljobs.com",
-      phone: "01722000000",
-      passwordHash: "$2a$10$hL6w2Wv82XqMh1.J3rF90e6B9bU8aE.kF6N0N.o.tGZ1fC2vU6B1O",
-      role: "AFFILIATE",
-      status: "ACTIVE",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "usr_student_1",
-      name: "রাকিবুল হাসান",
-      email: "student@skilljobs.com",
-      phone: "01833000000",
-      passwordHash: "$2a$10$hL6w2Wv82XqMh1.J3rF90e6B9bU8aE.kF6N0N.o.tGZ1fC2vU6B1O",
-      role: "STUDENT",
-      status: "ACTIVE",
-      createdAt: new Date().toISOString(),
-    },
   ];
 
-  marketers: MockMarketerProfile[] = [
-    {
-      id: "mkt_1",
-      userId: "usr_affiliate_1",
-      referralCode: "TANVIR50",
-      status: "APPROVED",
-      occupation: "কন্টেন্ট ক্রিয়েটর ও ডিজিটাল মার্কেটার",
-      experience: "৩ বছরের বেশি ফেসবুক ও ইউটিউব অ্যাফিলিয়েট মার্কেটিং",
-      channels: "Facebook Page (50k followers), YouTube Channel (25k subscribers)",
-      whyJoin: "মানসম্মত বাংলা কোর্সের প্রচার করে ভালো কমিশন আয় করতে চাই।",
-      payoutMethod: "BKASH",
-      payoutAccountNo: "01722000000",
-      totalClicks: 420,
-      totalConversions: 28,
-      lifetimeEarnings: 15400,
-      currentBalance: 3200,
-      pendingBalance: 1200,
-      paidEarnings: 11000,
-      approvedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  marketers: MockMarketerProfile[] = [];
 
-  applications: MockAffiliateApplication[] = [
-    {
-      id: "app_1",
-      userId: "usr_student_1",
-      fullName: "রাকিবুল হাসান",
-      phone: "01833000000",
-      email: "student@skilljobs.com",
-      occupation: "শিক্ষার্থী ও ফ্রিল্যান্সার",
-      channels: "ফেসবুক প্রোফাইল ও লিঙ্কডইন নেটওয়ার্ক",
-      marketingExperience: "কলেজ ও বিশ্ববিদ্যালয়ের গ্রুপগুলোতে স্টুডেন্ট কমিউনিটি মেন্টর হিসেবে কাজ করেছি।",
-      whyJoin: "স্কিলজবসের কোর্সগুলো প্র্যাকটিক্যাল এবং আমার পরিচিত অনেকের এই কোর্সগুলো প্রয়োজন।",
-      status: "PENDING",
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-    },
-  ];
+  applications: MockAffiliateApplication[] = [];
 
   categories: MockCourseCategory[] = [...DEFAULT_COURSE_CATEGORIES];
 
-  courses: MockCourse[] = [
-    {
-      id: "crs_1",
-      title: "Full Stack Web Development Mastery",
-      titleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      slug: "full-stack-web-development-mastery",
-      summaryBn: "জিরো থেকে অ্যাডভান্সড লেভেলে রিয়েল লাইফ প্রজেক্ট তৈরি করে আন্তর্জাতিক রিমোট জবের প্রস্তুতি নিন।",
-      descriptionBn: "এই কোর্সে আপনি শিখবেন কীভাবে আধুনিক টেকনোলজিতে ফুলস্ট্যাক ওয়েব অ্যাপ্লিকেশন তৈরি করতে হয়। ডাটাবেজ মডেলিং থেকে শুরু করে সার্ভার ডেপ্লয়মেন্ট পর্যন্ত প্রতিটি ধাপ হ্যান্ডস-অন প্রজেক্টের মাধ্যমে শেখানো হয়েছে।",
-      thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80",
-      price: 3500,
-      originalPrice: 6000,
-      commissionRate: 25,
-      isAffiliateEligible: true,
-      status: "PUBLISHED",
-      categorySlug: "web-development",
-      categoryNameBn: "ওয়েব ডেভেলপমেন্ট",
-      duration: "৪০+ ঘণ্টা",
-      totalLessons: 64,
-      difficulty: "শিক্ষানবিস থেকে দক্ষ",
-      featured: true,
-      instructor: {
-        name: "মাহমুদুর রহমান",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-        designation: "লিড সফটওয়্যার ইঞ্জিনিয়ার",
-        instructorType: "LEAD",
-        instructorTypeBn: "লিড ইন্সট্রাক্টর",
-        description: "৮+ বছরের ইন্ডাস্ট্রিয়াল অভিজ্ঞতা সম্পন্ন সফটওয়্যার ইঞ্জিনিয়ার। শীর্ষস্থানীয় গ্লোবাল টেক কোম্পানিতে Next.js, React ও ক্লাউড আর্কিটেকচারে কাজ করার পাশাপাশি ১০,০০০+ শিক্ষার্থীকে সফলভাবে ওয়েব ডেভেলপমেন্ট প্রশিক্ষণ দিয়েছেন।",
-      },
-      modules: [
-        {
-          id: "mod_1",
-          titleBn: "মডিউল ১: আধুনিক ওয়েব আর্কিটেকচার ও সেটআপ",
-          lessons: [
-            {
-              id: "lsn_1",
-              titleBn: "কোর্স পরিচিতি ও রোডম্যাপ গাইড",
-              duration: "১৫ মিনিট",
-              content: "কোর্সের গাইডলাইন এবং স্টাডি রুটিন কীভাবে অনুসরণ করবেন।",
-              isFreePreview: true,
-              videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            },
-            {
-              id: "lsn_2",
-              titleBn: "ডেভেলপমেন্ট টুলস ও গিট গিটহাব কনফিগারেশন",
-              duration: "২৫ মিনিট",
-              content: "VS Code, Git, Node.js এবং প্রফেশনাল এক্সটেনশন সেটআপ।",
-              isFreePreview: false,
-            },
-          ],
-        },
-        {
-          id: "mod_2",
-          titleBn: "মডিউল ২: Next.js অ্যাপ রাউটার ও ডাটাবেজ আর্কিটেকচার",
-          lessons: [
-            {
-              id: "lsn_3",
-              titleBn: "সার্ভার এবং ক্লায়েন্ট কম্পোনেন্টের বাস্তব প্রয়োগ",
-              duration: "৩০ মিনিট",
-              content: "পারফরম্যান্স ও এসইও অপ্টিমাইজড আর্কিটেকচার তৈরির নিয়ম।",
-              isFreePreview: true,
-              videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "crs_2",
-      title: "Digital Marketing & High-ROI Ads Blueprint",
-      titleBn: "ডিজিটাল মার্কেটিং ও হাই-কনভার্সন অ্যাড ব্লুপ্রিন্ট",
-      slug: "digital-marketing-growth-hacking",
-      summaryBn: "কম বাজেটে সর্বোচ্চ সেলস ও লিড জেনারেশনের প্র্যাকটিক্যাল গাইডলাইন।",
-      descriptionBn: "ফেসবুক, ইনস্টাগ্রাম এবং গুগল বিজ্ঞাপনে সফল প্রচারণার পূর্ণাঙ্গ স্ট্র্যাটেজি। ডাটা-ড্রিভেন মার্কেটিং ও রি-টার্গেটিং ফানেল তৈরির বাস্তব প্রজেক্ট।",
-      thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
-      price: 2500,
-      originalPrice: 4500,
-      commissionRate: 30,
-      isAffiliateEligible: true,
-      status: "PUBLISHED",
-      categorySlug: "digital-marketing",
-      categoryNameBn: "ডিজিটাল মার্কেটিং",
-      duration: "২৮+ ঘণ্টা",
-      totalLessons: 42,
-      difficulty: "সকল স্তরের জন্য",
-      featured: true,
-      instructor: {
-        name: "তানজিলা আক্তার",
-        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
-        designation: "গ্রোথ মার্কেটিং স্পেশালিস্ট",
-        instructorType: "LEAD",
-        instructorTypeBn: "লিড ইন্সট্রাক্টর",
-        description: "মেটা ও গুগল সার্টিফাইড ডিজিটাল মার্কেটার। দেশি ও আন্তর্জাতিক ই-কমার্স এবং বিটুবি ব্র্যান্ডের জন্য ৫ কোটি+ টাকার অ্যাড বাজেট সফলভাবে হ্যান্ডেল করার বাস্তব অভিজ্ঞতা রয়েছে।",
-      },
-      modules: [
-        {
-          id: "mod_2_1",
-          titleBn: "মডিউল ১: মেটা অ্যাডস ম্যানেজার ও পিক্সেল ইন্টিগ্রেশন",
-          lessons: [
-            {
-              id: "lsn_2_1",
-              titleBn: "বিজনেস ম্যানেজার ও ডোমেন ভেরিফিকেশন",
-              duration: "২০ মিনিট",
-              content: "মেটা বিজনেস সুট সেটআপের পূর্ণাঙ্গ ধাপ।",
-              isFreePreview: true,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "crs_3",
-      title: "UI/UX Design Masterclass with Figma",
-      titleBn: "ফিগোমা দিয়ে আন্তর্জাতিক মানের ইউআই/ইউএক্স ডিজাইন",
-      slug: "ui-ux-design-with-figma",
-      summaryBn: "রিসার্চ থেকে শুরু করে হাই-ফিডেলিটি মোবাইল এবং ওয়েব ইউআই ডিজাইন।",
-      descriptionBn: "আন্তর্জাতিক ক্লায়েন্টদের জন্য প্রফেশনাল ডিজাইন প্রজেক্ট তৈরি করুন। অটো-লেআউট, কম্পোনেন্ট ভ্যারিয়েন্টস এবং প্রোটোটাইপিং এর পূর্ণাঙ্গ প্রশিক্ষণ।",
-      thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&auto=format&fit=crop&q=80",
-      price: 2800,
-      originalPrice: 5000,
-      commissionRate: 20,
-      isAffiliateEligible: true,
-      status: "PUBLISHED",
-      categorySlug: "graphics-uiux",
-      categoryNameBn: "গ্রাফিক্স ও ইউআই/ইউএক্স",
-      duration: "৩২+ ঘণ্টা",
-      totalLessons: 50,
-      difficulty: "শিক্ষানবিস থেকে দক্ষ",
-      featured: true,
-      instructor: {
-        name: "শাকিল মাহমুদ",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
-        designation: "প্রিন্সিপাল প্রোডাক্ট ডিজাইনার",
-        instructorType: "LEAD",
-        instructorTypeBn: "লিড ইন্সট্রাক্টর",
-        description: "আন্তর্জাতিক ফিনটেক ও সাস প্রোডাক্টে ইউজার এক্সপেরিয়েন্স ডিজাইনার হিসেবে ৭+ বছরের অভিজ্ঞতা। ফিগমা ও ডিজাইন সিস্টেমে আন্তর্জাতিক ক্লায়েন্টদের সাথে কাজের বাস্তব অভিজ্ঞতা রয়েছে।",
-      },
-      modules: [],
-    },
-    {
-      id: "crs_4",
-      title: "Spoken English & Corporate Communication",
-      titleBn: "স্পোকেন ইংলিশ ও প্রফেশনাল কর্পোরেট কমিউনিকেশন",
-      slug: "spoken-english-corporate-communication",
-      summaryBn: "ভয় কাটিয়ে স্পষ্ট ও অনর্গল ইংরেজি বলার প্র্যাকটিক্যাল টেকনিক।",
-      descriptionBn: "রিমোট জব ও ফ্রিল্যান্সিংয়ে ক্লায়েন্টের সাথে নেগোশিয়েশন ও যোগাযোগ দক্ষতা বৃদ্ধি করুন।",
-      thumbnail: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80",
-      price: 1800,
-      originalPrice: 3200,
-      commissionRate: 20,
-      isAffiliateEligible: true,
-      status: "PUBLISHED",
-      categorySlug: "career-freelancing",
-      categoryNameBn: "ক্যারিয়ার ও ফ্রিল্যান্সিং",
-      duration: "২২+ ঘণ্টা",
-      totalLessons: 36,
-      difficulty: "সকল স্তরের জন্য",
-      featured: false,
-      instructor: {
-        name: "নুসরাত জাহান",
-        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&auto=format&fit=crop&q=80",
-        designation: "কর্পোরেট কমিউনিকেশন ট্রেইনার",
-        instructorType: "CO",
-        instructorTypeBn: "কো-ইন্সট্রাক্টর",
-        description: "কর্পোরেট লিডারশিপ ও প্রফেশনাল ইংলিশ কমিউনিকেশন ট্রেইনার। মাল্টিন্যাশনাল কোম্পানি ও রিমোট ফ্রিল্যান্সারদের সফল যোগাযোগ দক্ষতা অর্জনে ৯+ বছর ধরে সফলভাবে প্রশিক্ষণ দিচ্ছেন।",
-      },
-      modules: [],
-    },
-  ];
+  courses: MockCourse[] = [];
 
-  orders: MockOrder[] = [
-    {
-      id: "ord_101",
-      orderNumber: "SKILL-2026-101",
-      customerId: "usr_student_1",
-      customerName: "রাকিবুল হাসান",
-      customerEmail: "student@skilljobs.com",
-      customerPhone: "01833000000",
-      marketerId: "mkt_1",
-      marketerCode: "TANVIR50",
-      marketerName: "তানভীর আহমেদ",
-      courseId: "crs_1",
-      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      price: 3500,
-      commissionRate: 25,
-      commissionAmount: 875,
-      status: "PAID",
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-    {
-      id: "ord_102",
-      orderNumber: "SKILL-2026-102",
-      customerId: "usr_student_1",
-      customerName: "রাকিবুল হাসান",
-      customerEmail: "student@skilljobs.com",
-      customerPhone: "01833000000",
-      marketerId: "mkt_1",
-      marketerCode: "TANVIR50",
-      marketerName: "তানভীর আহমেদ",
-      courseId: "crs_2",
-      courseTitleBn: "ডিজিটাল মার্কেটিং ও হাই-কনভার্সন অ্যাড ব্লুপ্রিন্ট",
-      price: 2500,
-      commissionRate: 30,
-      commissionAmount: 750,
-      status: "PAYMENT_REVIEW",
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-  ];
+  orders: MockOrder[] = [];
 
-  payments: MockPayment[] = [
-    {
-      id: "pay_101",
-      orderId: "ord_101",
-      orderNumber: "SKILL-2026-101",
-      customerName: "রাকিবুল হাসান",
-      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      marketerId: "mkt_1",
-      marketerCode: "TANVIR50",
-      marketerName: "তানভীর আহমেদ",
-      commissionAmount: 875,
-      commissionRate: 25,
-      amount: 3500,
-      paymentMethod: "BKASH_MANUAL",
-      senderNumber: "01833000000",
-      transactionId: "9BL7K2M19A",
-      status: "APPROVED",
-      reviewedById: "usr_admin_1",
-      reviewedAt: new Date(Date.now() - 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-    {
-      id: "pay_102",
-      orderId: "ord_102",
-      orderNumber: "SKILL-2026-102",
-      customerName: "রাকিবুল হাসান",
-      courseTitleBn: "ডিজিটাল মার্কেটিং ও হাই-কনভার্সন অ্যাড ব্লুপ্রিন্ট",
-      marketerId: "mkt_1",
-      marketerCode: "TANVIR50",
-      marketerName: "তানভীর আহমেদ",
-      commissionAmount: 750,
-      commissionRate: 30,
-      amount: 2500,
-      paymentMethod: "BKASH_MANUAL",
-      senderNumber: "01833000000",
-      transactionId: "BK82910XYZ",
-      status: "SUBMITTED",
-      customerNote: "বিকাশ অ্যাপের সেন্ড মানি অপশন ব্যবহার করেছি।",
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-    },
-  ];
+  payments: MockPayment[] = [];
 
-  enrollments: { customerId: string; courseId: string; enrolledAt: string }[] = [
-    {
-      customerId: "usr_student_1",
-      courseId: "crs_1",
-      enrolledAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ];
+  enrollments: { customerId: string; courseId: string; enrolledAt: string }[] = [];
 
-  commissions: MockCommission[] = [
-    {
-      id: "com_1",
-      orderId: "ord_101",
-      orderNumber: "SKILL-2026-101",
-      marketerId: "mkt_1",
-      courseId: "crs_1",
-      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      amount: 875,
-      rate: 25,
-      status: "APPROVED",
-      approvedAt: new Date(Date.now() - 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ];
+  commissions: MockCommission[] = [];
 
-  payouts: MockPayout[] = [
-    {
-      id: "po_1",
-      payoutNumber: "PO-2026-001",
-      marketerId: "mkt_1",
-      marketerName: "তানভীর আহমেদ",
-      amount: 5000,
-      method: "BKASH",
-      destinationNumber: "01722000000",
-      status: "PAID",
-      transactionReference: "BKASH-TRX-7890123",
-      adminNotes: "সফলভাবে bKash মার্চেন্ট থেকে পাঠানো হয়েছে।",
-      requestedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-      processedAt: new Date(Date.now() - 86400000 * 6).toISOString(),
-    },
-  ];
+  payouts: MockPayout[] = [];
 
-  clicks: MockAffiliateClick[] = [
-    {
-      id: "clk_1",
-      marketerId: "mkt_1",
-      courseId: "crs_1",
-      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      landingPage: "/courses/full-stack-web-development-mastery",
-      deviceType: "ডেস্কটপ",
-      referer: "Facebook",
-      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    },
-    {
-      id: "clk_2",
-      marketerId: "mkt_1",
-      courseId: "crs_2",
-      courseTitleBn: "ডিজিটাল মার্কেটিং ও হাই-কনভার্সন অ্যাড ব্লুপ্রিন্ট",
-      landingPage: "/courses/digital-marketing-growth-hacking",
-      deviceType: "মোবাইল",
-      referer: "YouTube",
-      createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-    },
-    {
-      id: "clk_3",
-      marketerId: "mkt_1",
-      courseId: "crs_1",
-      courseTitleBn: "ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট মাস্টারি (MERN & Next.js)",
-      landingPage: "/courses/full-stack-web-development-mastery",
-      deviceType: "মোবাইল",
-      referer: "ডিরেক্ট ভিজিট",
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-  ];
+  clicks: MockAffiliateClick[] = [];
 
-  auditLogs: MockAuditLog[] = [
-    {
-      id: "aud_1",
-      actorEmail: "admin@skilljobs.com",
-      action: "PAYMENT_APPROVED",
-      entity: "Payment",
-      entityId: "pay_101",
-      details: "অর্ডার SKILL-2026-101 এর bKash পেমেন্ট অনুমোদন করা হয়েছে। কোর্স এক্সেস ও ৮৭৫ টাকা কমিশন কার্যকর করা হয়েছে।",
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ];
+  auditLogs: MockAuditLog[] = [];
 
   faqs = [
     {
@@ -780,19 +407,31 @@ class MockDatabase {
     },
     stats: {
       isManual: false,
-      manualAffiliates: 120,
-      manualSales: 450,
-      manualCommissionPaid: 68000,
-      manualAvailableCourses: 4,
+      manualAffiliates: 0,
+      manualSales: 0,
+      manualCommissionPaid: 0,
+      manualAvailableCourses: 0,
     },
     dashboardAnalytics: {
       isManual: false,
-      totalClicks: 420,
-      totalConversions: 28,
-      summaryTurnover7d: 142000,
-      summaryPayout7d: 28400,
-      summaryOrders7d: 69,
+      totalClicks: 0,
+      totalConversions: 0,
+      summaryTurnover7d: 0,
+      summaryPayout7d: 0,
+      summaryOrders7d: 0,
     },
+  };
+
+  analyticsHistory = {
+    "7d": [
+      { label: "শনি", revenue: 0, commission: 0, orders: 0 },
+      { label: "রবি", revenue: 0, commission: 0, orders: 0 },
+      { label: "সোম", revenue: 0, commission: 0, orders: 0 },
+      { label: "মঙ্গল", revenue: 0, commission: 0, orders: 0 },
+      { label: "বুধ", revenue: 0, commission: 0, orders: 0 },
+      { label: "বৃহস্পতি", revenue: 0, commission: 0, orders: 0 },
+      { label: "শুক্র", revenue: 0, commission: 0, orders: 0 },
+    ],
   };
 }
 

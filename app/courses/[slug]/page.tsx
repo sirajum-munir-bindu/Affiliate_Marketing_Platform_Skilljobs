@@ -4,7 +4,7 @@ import { DataService } from "@/lib/services/data-service";
 import { DEFAULT_INSTRUCTOR, DEFAULT_LEARNING_OUTCOMES } from "@/lib/db/mock-data";
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import { notFound } from "next/navigation";
-import { Clock, BookOpen, CheckCircle, Award, PlayCircle } from "lucide-react";
+import { Clock, BookOpen, CheckCircle, Award, PlayCircle, Users, FileText } from "lucide-react";
 import { headers } from "next/headers";
 import { CourseDetailClient } from "./CourseDetailClient";
 import {
@@ -48,7 +48,11 @@ export default async function CourseDetailPage({
 
   const commissionAmount = (course.price * course.commissionRate) / 100;
 
-  const instructor = course.instructor || DEFAULT_INSTRUCTOR;
+  const instructors =
+    course.instructors && course.instructors.length > 0
+      ? course.instructors
+      : [course.instructor || DEFAULT_INSTRUCTOR];
+  const instructions = course.instructions || [];
   const learningOutcomes =
     course.learningOutcomes && course.learningOutcomes.length > 0
       ? course.learningOutcomes
@@ -183,40 +187,81 @@ export default async function CourseDetailPage({
                 </div>
               )}
 
-              {/* Course Instructor */}
-              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-5">
-                <h2 className="text-xl font-bold text-[#172033]">কোর্স ইন্সট্রাক্টর</h2>
-
-                <div className="flex flex-col sm:flex-row items-start gap-5">
-                  <img
-                    src={instructor.avatar}
-                    alt={instructor.name}
-                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
-                  />
-
-                  <div className="space-y-2 flex-1">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg sm:text-xl font-bold text-[#172033]">
-                          {instructor.name}
-                        </h3>
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                          instructor.instructorType === "CO"
-                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                            : "bg-blue-50 text-[#2563EB] border-blue-200"
-                        }`}>
-                          {instructor.instructorTypeBn || (instructor.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর")}
-                        </span>
+              {/* Course Instructions / Guidelines */}
+              {instructions.length > 0 && (
+                <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-4">
+                  <h2 className="text-xl font-bold text-[#172033] flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-600" />
+                    <span>কোর্স নির্দেশনা ও নিয়মাবলী</span>
+                  </h2>
+                  <div className="space-y-3">
+                    {instructions.map((inst, idx) => (
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                          {formatBnNumber(idx + 1)}
+                        </div>
+                        <p className="text-sm text-[#475569] leading-relaxed font-medium">
+                          {inst}
+                        </p>
                       </div>
-                      <p className="text-xs sm:text-sm text-[#64748B] mt-0.5 font-medium">
-                        {instructor.designation}
-                      </p>
-                    </div>
-
-                    <p className="text-sm text-[#475569] leading-relaxed">
-                      {instructor.description}
-                    </p>
+                    ))}
                   </div>
+                </div>
+              )}
+
+              {/* Course Instructors */}
+              <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-6">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h2 className="text-xl font-bold text-[#172033] flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-600" />
+                    <span>{instructors.length > 1 ? "কোর্স ইন্সট্রাক্টরবৃন্দ" : "কোর্স ইন্সট্রাক্টর"}</span>
+                  </h2>
+                  {instructors.length > 1 && (
+                    <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                      মোট {formatBnNumber(instructors.length)} জন মেন্টর
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-6 divide-y divide-slate-100">
+                  {instructors.map((ins, idx) => (
+                    <div key={idx} className={`flex flex-col sm:flex-row items-start gap-5 ${idx > 0 ? "pt-6" : ""}`}>
+                      <img
+                        src={ins.avatar}
+                        alt={ins.name}
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-slate-200 shadow-sm shrink-0"
+                      />
+
+                      <div className="space-y-2 flex-1">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg sm:text-xl font-bold text-[#172033]">
+                              {ins.name}
+                            </h3>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                                ins.instructorType === "CO"
+                                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                                  : "bg-blue-50 text-[#2563EB] border-blue-200"
+                              }`}
+                            >
+                              {ins.instructorTypeBn ||
+                                (ins.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর")}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5 font-medium">
+                            {ins.designation}
+                          </p>
+                        </div>
+
+                        {ins.description && (
+                          <p className="text-sm text-[#475569] leading-relaxed">
+                            {ins.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

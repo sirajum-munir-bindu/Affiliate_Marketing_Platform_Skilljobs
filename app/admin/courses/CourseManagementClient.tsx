@@ -32,9 +32,12 @@ import {
   FolderPlus,
   Check,
   User,
+  Users,
   Video,
   ListChecks,
-  PlayCircle
+  PlayCircle,
+  FileText,
+  Info
 } from "lucide-react";
 
 interface CourseManagementClientProps {
@@ -62,7 +65,12 @@ const DEFAULT_FORM: Partial<MockCourse> = {
   difficulty: "সকল স্তরের জন্য",
   featured: false,
   learningOutcomes: [...DEFAULT_LEARNING_OUTCOMES],
+  instructions: [
+    "কোর্সটি শুরু করার আগে প্রাথমিক কম্পিউটার ও ইন্টারনেট ব্যবহারের ধারণা থাকা বাঞ্ছনীয়।",
+    "প্রতিটি মডিউলের ভিডিও দেখে সাথে সাথে হ্যান্ডস-অন প্র্যাকটিস করুন।",
+  ],
   instructor: { ...DEFAULT_INSTRUCTOR },
+  instructors: [{ ...DEFAULT_INSTRUCTOR }],
   modules: [],
 };
 
@@ -169,7 +177,12 @@ export function CourseManagementClient({
       categorySlug: defaultCat?.slug || DEFAULT_FORM.categorySlug,
       categoryNameBn: defaultCat?.nameBn || DEFAULT_FORM.categoryNameBn,
       learningOutcomes: [...DEFAULT_LEARNING_OUTCOMES],
+      instructions: [
+        "কোর্সটি শুরু করার আগে প্রাথমিক কম্পিউটার ও ইন্টারনেট ব্যবহারের ধারণা থাকা বাঞ্ছনীয়।",
+        "প্রতিটি মডিউলের ভিডিও দেখে সাথে সাথে হ্যান্ডস-অন প্র্যাকটিস করুন।",
+      ],
       instructor: { ...DEFAULT_INSTRUCTOR },
+      instructors: [{ ...DEFAULT_INSTRUCTOR }],
       modules: [],
     });
     setIsModalOpen(true);
@@ -182,15 +195,26 @@ export function CourseManagementClient({
     setShowInlineCategoryForm(false);
     setInlineCategoryNameBn("");
     setInlineCategoryNameEn("");
+
+    const courseInstructors =
+      course.instructors && course.instructors.length > 0
+        ? course.instructors.map((ins) => ({ ...ins }))
+        : course.instructor
+          ? [{ ...course.instructor }]
+          : [{ ...DEFAULT_INSTRUCTOR }];
+
     setFormData({
       ...course,
       learningOutcomes:
         course.learningOutcomes && course.learningOutcomes.length > 0
           ? [...course.learningOutcomes]
           : [...DEFAULT_LEARNING_OUTCOMES],
-      instructor: course.instructor
-        ? { ...course.instructor }
-        : { ...DEFAULT_INSTRUCTOR },
+      instructions:
+        course.instructions && course.instructions.length > 0
+          ? [...course.instructions]
+          : [],
+      instructor: courseInstructors[0],
+      instructors: courseInstructors,
       modules: course.modules
         ? course.modules.map((m) => ({
             ...m,
@@ -201,16 +225,80 @@ export function CourseManagementClient({
     setIsModalOpen(true);
   };
 
-  // Instructor field helper
+  // Single Instructor helper for backward compatibility
   const updateInstructor = (patch: Partial<MockInstructor>) => {
+    handleUpdateInstructor(0, patch);
+  };
+
+  // Multiple Instructors helpers
+  const handleAddInstructor = () => {
     setFormData((prev) => {
-      const current = prev.instructor || { ...DEFAULT_INSTRUCTOR };
-      const next = { ...current, ...patch };
+      const currentInstructors =
+        prev.instructors && prev.instructors.length > 0
+          ? [...prev.instructors]
+          : prev.instructor
+            ? [{ ...prev.instructor }]
+            : [{ ...DEFAULT_INSTRUCTOR }];
+
+      const newInstructor: MockInstructor = {
+        name: "",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80",
+        designation: "কো-ইন্সট্রাক্টর",
+        instructorType: "CO",
+        instructorTypeBn: "কো-ইন্সট্রাক্টর",
+        description: "",
+      };
+
+      const nextList = [...currentInstructors, newInstructor];
+      return {
+        ...prev,
+        instructors: nextList,
+        instructor: nextList[0],
+      };
+    });
+  };
+
+  const handleUpdateInstructor = (index: number, patch: Partial<MockInstructor>) => {
+    setFormData((prev) => {
+      const currentInstructors =
+        prev.instructors && prev.instructors.length > 0
+          ? [...prev.instructors]
+          : prev.instructor
+            ? [{ ...prev.instructor }]
+            : [{ ...DEFAULT_INSTRUCTOR }];
+
+      const target = currentInstructors[index] || { ...DEFAULT_INSTRUCTOR };
+      const next = { ...target, ...patch };
       if (patch.instructorType) {
         next.instructorTypeBn =
           patch.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর";
       }
-      return { ...prev, instructor: next };
+      currentInstructors[index] = next;
+
+      return {
+        ...prev,
+        instructors: currentInstructors,
+        instructor: currentInstructors[0],
+      };
+    });
+  };
+
+  const handleRemoveInstructor = (index: number) => {
+    setFormData((prev) => {
+      const currentInstructors = (
+        prev.instructors && prev.instructors.length > 0
+          ? prev.instructors
+          : prev.instructor
+            ? [prev.instructor]
+            : [{ ...DEFAULT_INSTRUCTOR }]
+      ).filter((_, i) => i !== index);
+
+      const finalList = currentInstructors.length > 0 ? currentInstructors : [{ ...DEFAULT_INSTRUCTOR }];
+      return {
+        ...prev,
+        instructors: finalList,
+        instructor: finalList[0],
+      };
     });
   };
 
@@ -234,6 +322,29 @@ export function CourseManagementClient({
     setFormData((prev) => ({
       ...prev,
       learningOutcomes: (prev.learningOutcomes || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  // Multiple Instructions / Course Guidelines helpers
+  const handleAddInstruction = () => {
+    setFormData((prev) => ({
+      ...prev,
+      instructions: [...(prev.instructions || []), ""],
+    }));
+  };
+
+  const handleUpdateInstruction = (index: number, value: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.instructions || [])];
+      list[index] = value;
+      return { ...prev, instructions: list };
+    });
+  };
+
+  const handleRemoveInstruction = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      instructions: (prev.instructions || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -1318,98 +1429,164 @@ export function CourseManagementClient({
 
               {modalTab === "instructor" && (
                 <div className="space-y-6">
-                  {/* Course Instructor Section */}
+                  {/* Multiple Course Instructors Section */}
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-extrabold text-slate-900 flex items-center gap-2 text-sm">
-                        <User className="w-4 h-4 text-blue-600" />
-                        <span>কোর্স ইন্সট্রাক্টর তথ্য</span>
-                      </h4>
-                      <span className="text-[11px] text-slate-500">
-                        কোর্স ডিটেইল পেজে প্রদর্শিত হবে
-                      </span>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-blue-600" />
+                          <span>কোর্স ইন্সট্রাক্টরবৃন্দ ({formatBnNumber((formData.instructors || []).length || 1)} জন)</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          একাধিক ইন্সট্রাক্টর যোগ করতে পারেন (লিড ইন্সট্রাক্টর, কো-ইন্সট্রাক্টর বা মেন্টর)
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddInstructor}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>নতুন ইন্সট্রাক্টর যোগ করুন</span>
+                      </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="font-bold text-slate-700 block">ইন্সট্রাক্টরের নাম</label>
-                        <input
-                          type="text"
-                          value={formData.instructor?.name || ""}
-                          onChange={(e) => updateInstructor({ name: e.target.value })}
-                          placeholder="যেমন: মাহমুদুর রহমান"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-medium"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="font-bold text-slate-700 block">পদবি (Designation)</label>
-                        <input
-                          type="text"
-                          value={formData.instructor?.designation || ""}
-                          onChange={(e) => updateInstructor({ designation: e.target.value })}
-                          placeholder="যেমন: লিড সফটওয়্যার ইঞ্জিনিয়ার"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-medium"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="font-bold text-slate-700 block">ইন্সট্রাক্টর ধরন</label>
-                        <select
-                          value={formData.instructor?.instructorType || "LEAD"}
-                          onChange={(e) =>
-                            updateInstructor({
-                              instructorType: e.target.value as "LEAD" | "CO",
-                            })
-                          }
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-semibold"
+                    {/* Instructor Cards List */}
+                    <div className="space-y-4">
+                      {(formData.instructors && formData.instructors.length > 0
+                        ? formData.instructors
+                        : formData.instructor
+                          ? [formData.instructor]
+                          : [{ ...DEFAULT_INSTRUCTOR }]
+                      ).map((ins, index) => (
+                        <div
+                          key={index}
+                          className="p-4 rounded-xl bg-white border border-slate-200/90 shadow-xs space-y-4 transition-all"
                         >
-                          <option value="LEAD">লিড ইন্সট্রাক্টর (Lead)</option>
-                          <option value="CO">কো-ইন্সট্রাক্টর (Co)</option>
-                        </select>
-                      </div>
-                    </div>
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold flex items-center justify-center">
+                                {formatBnNumber(index + 1)}
+                              </span>
+                              <span className="font-extrabold text-slate-800 text-xs">
+                                {ins.name ? ins.name : `ইন্সট্রাক্টর #${formatBnNumber(index + 1)}`}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                                  ins.instructorType === "CO"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                                    : "bg-blue-50 text-blue-700 border-blue-200"
+                                }`}
+                              >
+                                {ins.instructorType === "CO" ? "কো-ইন্সট্রাক্টর" : "লিড ইন্সট্রাক্টর"}
+                              </span>
+                            </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
-                      <div className="sm:col-span-3 space-y-1.5">
-                        <label className="font-bold text-slate-700 block">
-                          ইন্সট্রাক্টর ছবি (Avatar URL)
-                        </label>
-                        <input
-                          type="url"
-                          value={formData.instructor?.avatar || ""}
-                          onChange={(e) => updateInstructor({ avatar: e.target.value })}
-                          placeholder="https://images.unsplash.com/..."
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden text-[11px]"
-                        />
-                      </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveInstructor(index)}
+                              disabled={(formData.instructors || []).length <= 1}
+                              title={(formData.instructors || []).length <= 1 ? "ন্যূনতম একজন ইন্সট্রাক্টর আবশ্যক" : "মুছে ফেলুন"}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                (formData.instructors || []).length <= 1
+                                  ? "text-slate-300 cursor-not-allowed"
+                                  : "text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                              }`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
 
-                      <div className="flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-white flex items-center justify-center">
-                          {formData.instructor?.avatar ? (
-                            <img
-                              src={formData.instructor.avatar}
-                              alt="Instructor"
-                              className="w-full h-full object-cover"
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                ইন্সট্রাক্টরের নাম <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={ins.name || ""}
+                                onChange={(e) => handleUpdateInstructor(index, { name: e.target.value })}
+                                placeholder="যেমন: মাহমুদুর রহমান"
+                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-medium"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                পদবি (Designation)
+                              </label>
+                              <input
+                                type="text"
+                                value={ins.designation || ""}
+                                onChange={(e) => handleUpdateInstructor(index, { designation: e.target.value })}
+                                placeholder="যেমন: লিড সফটওয়্যার ইঞ্জিনিয়ার"
+                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-medium"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                ইন্সট্রাক্টর ধরন (Role)
+                              </label>
+                              <select
+                                value={ins.instructorType || "LEAD"}
+                                onChange={(e) =>
+                                  handleUpdateInstructor(index, {
+                                    instructorType: e.target.value as "LEAD" | "CO",
+                                  })
+                                }
+                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden font-semibold"
+                              >
+                                <option value="LEAD">লিড ইন্সট্রাক্টর (Lead)</option>
+                                <option value="CO">কো-ইন্সট্রাক্টর (Co)</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-center">
+                            <div className="sm:col-span-3 space-y-1">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                ছবি URL (Avatar)
+                              </label>
+                              <input
+                                type="url"
+                                value={ins.avatar || ""}
+                                onChange={(e) => handleUpdateInstructor(index, { avatar: e.target.value })}
+                                placeholder="https://images.unsplash.com/..."
+                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden text-[11px]"
+                              />
+                            </div>
+
+                            <div className="flex items-center sm:justify-center">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0">
+                                {ins.avatar ? (
+                                  <img
+                                    src={ins.avatar}
+                                    alt="Instructor"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <User className="w-5 h-5 text-slate-300" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700 block">
+                              ইন্সট্রাক্টর সম্পর্কে বিস্তারিত (Bio)
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={ins.description || ""}
+                              onChange={(e) => handleUpdateInstructor(index, { description: e.target.value })}
+                              placeholder="ইন্সট্রাক্টরের অভিজ্ঞতা ও দক্ষতা সম্পর্কে লিখুন..."
+                              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden resize-none"
                             />
-                          ) : (
-                            <User className="w-6 h-6 text-slate-300" />
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="font-bold text-slate-700 block">
-                        ইন্সট্রাক্টর সম্পর্কে বিস্তারিত (Bio)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formData.instructor?.description || ""}
-                        onChange={(e) => updateInstructor({ description: e.target.value })}
-                        placeholder="ইন্সট্রাক্টরের অভিজ্ঞতা ও দক্ষতা সম্পর্কে লিখুন..."
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-blue-500 focus:outline-hidden resize-none"
-                      />
+                      ))}
                     </div>
                   </div>
 
@@ -1460,6 +1637,60 @@ export function CourseManagementClient({
                       {(formData.learningOutcomes || []).length === 0 && (
                         <p className="text-[11px] text-slate-400 text-center py-3">
                           কোনো পয়েন্ট যোগ করা হয়নি (ডিফল্ট পয়েন্ট ব্যবহৃত হবে)।
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Multiple Instructions / Course Guidelines Section */}
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 flex items-center gap-2 text-sm">
+                          <FileText className="w-4 h-4 text-indigo-600" />
+                          <span>কোর্স নির্দেশনা ও নিয়মাবলী (Course Instructions)</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          কোর্স শুরু করার আগে শিক্ষার্থীদের করণীয় ও প্রয়োজনীয় নির্দেশিকা যোগ করুন।
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddInstruction}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>নির্দেশনা যোগ করুন</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {(formData.instructions || []).map((instruction, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                            {formatBnNumber(index + 1)}
+                          </div>
+                          <input
+                            type="text"
+                            value={instruction}
+                            onChange={(e) => handleUpdateInstruction(index, e.target.value)}
+                            placeholder={`নির্দেশনা ${formatBnNumber(index + 1)}: যেমন- কম্পিউটার বা ইন্টারনেট সংযোগ থাকা আবশ্যক...`}
+                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-indigo-500 focus:outline-hidden font-medium text-xs"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveInstruction(index)}
+                            title="মুছে ফেলুন"
+                            className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {(formData.instructions || []).length === 0 && (
+                        <p className="text-[11px] text-slate-400 text-center py-3">
+                          কোনো বিশেষ নির্দেশনা যোগ করা হয়নি।
                         </p>
                       )}
                     </div>
