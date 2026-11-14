@@ -18,6 +18,7 @@ import {
   Sparkles,
   ChevronRight,
   Sliders,
+  MessageSquareQuote,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -75,6 +76,13 @@ export function AdminSidebar({
           icon: Sliders,
           badge: "ম্যানুয়াল",
           badgeColor: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+        },
+        {
+          name: "টপ অ্যাফিলিয়েট অভিজ্ঞতা",
+          href: "/admin/testimonials",
+          icon: MessageSquareQuote,
+          badge: "রিভিউ",
+          badgeColor: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
         },
       ],
     },

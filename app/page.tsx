@@ -10,10 +10,11 @@ import { DataService } from "@/lib/services/data-service";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [stats, courses, settings] = await Promise.all([
+  const [stats, courses, settings, testimonials] = await Promise.all([
     DataService.getPlatformStats(),
     DataService.getCourses(true),
     DataService.getHomepageSettings(),
+    DataService.getTestimonials(true),
   ]);
 
   return (
@@ -24,7 +25,7 @@ export default async function HomePage() {
         <StatsCounter stats={stats} />
         <FeaturedCourses courses={courses} />
         <DashboardPreview />
-        <TestimonialsSection />
+        <TestimonialsSection testimonials={testimonials} />
       </main>
       <Footer />
     </div>

@@ -113,39 +113,7 @@ async function main() {
     });
   }
 
-  // 7. Seed Testimonials
-  const testimonials = [
-    {
-      name: "ফারহান চৌধুরী",
-      roleBn: "সোশ্যাল মিডিয়া মার্কেটার",
-      quoteBn: "স্কিলজবসের অ্যাফিলিয়েট সিস্টেমে সবচেয়ে ভালো লেগেছে এদের দ্রুত ট্র্যাকিং এবং স্বচ্ছ bKash পেমেন্ট প্রক্রিয়া। গত ৩ মাসে আমি ৭০,০০০+ টাকার কোর্স সেল করে ১৮,০০০+ টাকা কমিশন তুলেছি।",
-      earningsText: "১৮,৫০০+ টাকা উত্তোলিত",
-      rating: 5,
-      sortOrder: 1,
-    },
-    {
-      name: "নাসরিন সুলতানা",
-      roleBn: "ফেসবুক গ্রুপ ও কমিউনিটি লিডার",
-      quoteBn: "আমার গ্রুপের মেম্বারদের জন্য মানসম্মত স্কিল কোর্স শেয়ার করতে পেরে ভালো লাগে। প্রতিটি সেলের বিস্তারিত ড্যাশবোর্ডে ক্লিয়ার দেখা যায়। কোনো জটিলতা নেই!",
-      earningsText: "১২,৩০০+ টাকা উত্তোলিত",
-      rating: 5,
-      sortOrder: 2,
-    },
-    {
-      name: "আরিফুল ইসলাম",
-      roleBn: "ইউটিউব কনটেন্ট ক্রিয়েটর",
-      quoteBn: "১০ মিনিট স্কুলের মতো প্রফেশনাল অনুভূতি দেয় এই প্ল্যাটফর্ম। রিয়েল টাইম ক্লিক ও কনভার্সন ট্র্যাকিং নিখুঁত কাজ করে। একজন মার্কেটার হিসেবে এটি সেরা প্ল্যাটফর্ম।",
-      earningsText: "২৫,৭০০+ টাকা উত্তোলিত",
-      rating: 5,
-      sortOrder: 3,
-    },
-  ];
-
-  for (const t of testimonials) {
-    await prisma.testimonial.create({
-      data: t,
-    });
-  }
+  // 7. Testimonials (Demo testimonials removed - add via Admin panel)
 
   // 8. Seed Platform Settings
   const settings = [

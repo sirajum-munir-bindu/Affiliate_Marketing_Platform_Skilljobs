@@ -251,6 +251,8 @@ export interface MockTestimonial {
   quoteBn: string;
   earningsText?: string;
   rating: number;
+  isPublished?: boolean;
+  sortOrder?: number;
 }
 
 export const DEFAULT_COURSE_CATEGORIES: MockCourseCategory[] = [
@@ -364,35 +366,7 @@ class MockDatabase {
     },
   ];
 
-  testimonials: MockTestimonial[] = [
-    {
-      id: "t_1",
-      name: "ফারহান চৌধুরী",
-      avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
-      roleBn: "সোশ্যাল মিডিয়া মার্কেটার",
-      quoteBn: "স্কিলজবসের অ্যাফিলিয়েট সিস্টেমে সবচেয়ে ভালো লেগেছে এদের দ্রুত ট্র্যাকিং এবং স্বচ্ছ bKash পেমেন্ট প্রক্রিয়া। গত ৩ মাসে আমি ৭০,০০০+ টাকার কোর্স সেল করে ১৮,০০০+ টাকা কমিশন তুলেছি।",
-      earningsText: "১৮,৫০০+ টাকা উত্তোলিত",
-      rating: 5,
-    },
-    {
-      id: "t_2",
-      name: "নাসরিন সুলতানা",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
-      roleBn: "ফেসবুক গ্রুপ ও কমিউনিটি লিডার",
-      quoteBn: "আমার গ্রুপের মেম্বারদের জন্য মানসম্মত স্কিল কোর্স শেয়ার করতে পেরে ভালো লাগে। প্রতিটি সেলের বিস্তারিত ড্যাশবোর্ডে ক্লিয়ার দেখা যায়। কোনো জটিলতা নেই!",
-      earningsText: "১২,৩০০+ টাকা উত্তোলিত",
-      rating: 5,
-    },
-    {
-      id: "t_3",
-      name: "আরিফুল ইসলাম",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-      roleBn: "ইউটিউব কনটেন্ট ক্রিয়েটর",
-      quoteBn: "১০ মিনিট স্কুলের মতো প্রফেশনাল অনুভূতি দেয় এই প্ল্যাটফর্ম। রিয়েল টাইম ক্লিক ও কনভার্সন ট্র্যাকিং নিখুঁত কাজ করে। একজন মার্কেটার হিসেবে এটি সেরা প্ল্যাটফর্ম।",
-      earningsText: "২৫,৭০০+ টাকা উত্তোলিত",
-      rating: 5,
-    },
-  ];
+  testimonials: MockTestimonial[] = [];
 
   settings: MockPlatformSettings = {
     video: {

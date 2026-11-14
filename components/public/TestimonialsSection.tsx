@@ -1,11 +1,20 @@
 import { Star, Quote } from "lucide-react";
-import { mockDb } from "@/lib/db/mock-data";
+import { MockTestimonial, mockDb } from "@/lib/db/mock-data";
 
-export function TestimonialsSection() {
-  const testimonials = mockDb.testimonials;
+interface TestimonialsSectionProps {
+  testimonials?: MockTestimonial[];
+}
+
+export function TestimonialsSection({ testimonials: initialTestimonials }: TestimonialsSectionProps) {
+  const allTestimonials = initialTestimonials || mockDb.testimonials || [];
+  const publishedTestimonials = allTestimonials.filter((item) => item.isPublished !== false);
+
+  if (publishedTestimonials.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="py-12 sm:py-20 bg-white">
+    <section id="testimonials" className="py-12 sm:py-20 bg-white scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -20,7 +29,7 @@ export function TestimonialsSection() {
 
         {/* Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8">
-          {testimonials.map((item) => (
+          {publishedTestimonials.map((item) => (
             <div
               key={item.id}
               className="bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] p-5 sm:p-8 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6 relative"

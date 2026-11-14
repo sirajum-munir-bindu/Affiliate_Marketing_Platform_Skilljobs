@@ -10,6 +10,7 @@ import {
   MockPayout,
   MockPlatformSettings,
   MockInstructor,
+  MockTestimonial,
 } from "../db/mock-data";
 import bcrypt from "bcryptjs";
 import { generateReferralCode } from "../affiliate/tracking";
@@ -2308,5 +2309,135 @@ export class DataService {
       orders,
       payments,
     };
+  }
+
+  // --- TESTIMONIALS ---
+  static async getTestimonials(onlyPublished = false): Promise<MockTestimonial[]> {
+    if (!mockDb.testimonials) {
+      mockDb.testimonials = [];
+    }
+    const list = onlyPublished
+      ? mockDb.testimonials.filter((t) => t.isPublished !== false)
+      : mockDb.testimonials;
+
+    return [...list].sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+  }
+
+  static async getTestimonialById(id: string): Promise<MockTestimonial | null> {
+    return mockDb.testimonials?.find((t) => t.id === id) || null;
+  }
+
+  static async createTestimonial(
+    data: {
+      name: string;
+      avatar?: string;
+      roleBn: string;
+      quoteBn: string;
+      earningsText?: string;
+      rating?: number;
+      isPublished?: boolean;
+      sortOrder?: number;
+    },
+    actorEmail?: string
+  ): Promise<MockTestimonial> {
+    if (!mockDb.testimonials) {
+      mockDb.testimonials = [];
+    }
+
+    const newTestimonial: MockTestimonial = {
+      id: `t_${Date.now()}`,
+      name: (data.name || "").trim(),
+      avatar:
+        (data.avatar || "").trim() ||
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+      roleBn: (data.roleBn || "").trim(),
+      quoteBn: (data.quoteBn || "").trim(),
+      earningsText: (data.earningsText || "").trim() || undefined,
+      rating: Number(data.rating) || 5,
+      isPublished: data.isPublished !== undefined ? Boolean(data.isPublished) : true,
+      sortOrder: Number(data.sortOrder) || mockDb.testimonials.length + 1,
+    };
+
+    mockDb.testimonials.unshift(newTestimonial);
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: actorEmail || "admin@skilljobs.com",
+      action: "TESTIMONIAL_CREATED",
+      entity: "Testimonial",
+      entityId: newTestimonial.id,
+      details: `নতুন রিভিউ/টেস্টিমোনিয়াল যুক্ত করা হয়েছে: ${newTestimonial.name} (${newTestimonial.roleBn})`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return newTestimonial;
+  }
+
+  static async updateTestimonial(
+    id: string,
+    data: Partial<MockTestimonial>,
+    actorEmail?: string
+  ): Promise<MockTestimonial> {
+    if (!mockDb.testimonials) {
+      mockDb.testimonials = [];
+    }
+
+    const index = mockDb.testimonials.findIndex((t) => t.id === id);
+    if (index === -1) {
+      throw new Error("রিভিউটি পাওয়া যায়নি।");
+    }
+
+    const current = mockDb.testimonials[index];
+    const updated: MockTestimonial = {
+      ...current,
+      name: data.name !== undefined ? data.name.trim() : current.name,
+      avatar: data.avatar !== undefined ? data.avatar.trim() : current.avatar,
+      roleBn: data.roleBn !== undefined ? data.roleBn.trim() : current.roleBn,
+      quoteBn: data.quoteBn !== undefined ? data.quoteBn.trim() : current.quoteBn,
+      earningsText:
+        data.earningsText !== undefined ? data.earningsText.trim() || undefined : current.earningsText,
+      rating: data.rating !== undefined ? Number(data.rating) : current.rating,
+      isPublished: data.isPublished !== undefined ? Boolean(data.isPublished) : current.isPublished,
+      sortOrder: data.sortOrder !== undefined ? Number(data.sortOrder) : current.sortOrder,
+    };
+
+    mockDb.testimonials[index] = updated;
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: actorEmail || "admin@skilljobs.com",
+      action: "TESTIMONIAL_UPDATED",
+      entity: "Testimonial",
+      entityId: id,
+      details: `রিভিউ/টেস্টিমোনিয়াল আপডেট করা হয়েছে: ${updated.name}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return updated;
+  }
+
+  static async deleteTestimonial(id: string, actorEmail?: string): Promise<boolean> {
+    if (!mockDb.testimonials) {
+      mockDb.testimonials = [];
+    }
+
+    const index = mockDb.testimonials.findIndex((t) => t.id === id);
+    if (index === -1) {
+      throw new Error("রিভিউটি পাওয়া যায়নি।");
+    }
+
+    const [deleted] = mockDb.testimonials.splice(index, 1);
+
+    mockDb.auditLogs.unshift({
+      id: `aud_${Date.now()}`,
+      actorEmail: actorEmail || "admin@skilljobs.com",
+      action: "TESTIMONIAL_DELETED",
+      entity: "Testimonial",
+      entityId: id,
+      details: `রিভিউ/টেস্টিমোনিয়াল মুছে ফেলা হয়েছে: ${deleted.name}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    return true;
   }
 }

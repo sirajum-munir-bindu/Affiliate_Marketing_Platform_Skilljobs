@@ -25,6 +25,7 @@ import {
   TrendingUp,
   LineChart,
   ArrowUpRight,
+  MessageSquareQuote,
 } from "lucide-react";
 import { formatBDT, formatBnNumber } from "@/lib/utilities/cn";
 import { MockPlatformSettings } from "@/lib/db/mock-data";
@@ -263,6 +264,14 @@ export function HomepageControlClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/admin/testimonials"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs sm:text-sm font-bold transition-all shadow-md backdrop-blur-md hover:scale-[1.02]"
+            >
+              <MessageSquareQuote className="w-4 h-4 text-emerald-400" />
+              <span>টপ অ্যাফিলিয়েট অভিজ্ঞতা</span>
+            </Link>
+
             <Link
               href="/"
               target="_blank"
